@@ -1,0 +1,22 @@
+{
+  "key": "lee",
+  "groups": [
+    "lee"
+  ],
+  "address": "https://example.org/toa-examples/lee.git",
+  "branch": "main",
+  "commit": "445bab8c0d8861fc2566336a8eb9655d13532af3",
+  "date": "2026-11-14T14:00:00Z",
+  "previous": null,
+  "readable": true,
+  "library_yaml": null,
+  "includes": [],
+  "objects": [
+    "ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34",
+    "ifc_4915f191ad95b57dd34a628ab49030a457d91398"
+  ],
+  "removed": [
+    "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4"
+  ],
+  "problems": []
+}

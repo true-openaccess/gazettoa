@@ -1,0 +1,3 @@
+{"toa": "source/1"}
+{"include": "library.source.jsonl", "group": "pll", "branch": "pll", "sources": [{"git": "https://github.com/many-question/my_toa_lib.git"}]}
+{"include": "library.source.jsonl", "group": "risca", "branch": "risca", "sources": [{"git": "https://github.com/many-question/my_toa_lib.git"}]}

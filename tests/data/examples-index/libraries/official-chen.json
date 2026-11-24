@@ -1,0 +1,24 @@
+{
+  "key": "official-chen",
+  "groups": [
+    "official-chen"
+  ],
+  "address": "https://example.org/toa-examples/official-chen.git",
+  "branch": "main",
+  "commit": "1e4b957cda0dc35f355b85ed6bafd705431a16fd",
+  "date": "2026-11-09T09:00:00+08:00",
+  "previous": null,
+  "readable": true,
+  "library_yaml": null,
+  "includes": [],
+  "objects": [
+    "ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
+    "ckt_ddeacf24a1ad98201f1e46b00ddcabd3e47da576",
+    "doc_907ce675ba8c9de5c17d38c1af20c9d2f5b4f071",
+    "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+    "lib_cf125e93948ecdee725718e666cf7aa1be126799",
+    "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e"
+  ],
+  "removed": [],
+  "problems": []
+}

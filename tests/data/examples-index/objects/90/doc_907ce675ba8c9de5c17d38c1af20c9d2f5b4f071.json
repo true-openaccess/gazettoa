@@ -1,0 +1,87 @@
+{
+  "toa-index": 2,
+  "name": "doc_907ce675ba8c9de5c17d38c1af20c9d2f5b4f071",
+  "prefix": "doc",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "382324f1717ee93bdc09b7cfebcc0e01c8128e3cf0a239de3f70b8579847d3d5",
+  "manifest": {
+    "type": "doc",
+    "license": "CC0-1.0",
+    "author": "Chen Wei",
+    "title": "Less kickback in a StrongARM comparator",
+    "tags": [
+      "design-note"
+    ],
+    "refs": [
+      "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+      "ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b"
+    ],
+    "date": "2026-11-09"
+  },
+  "title": "Less kickback in a StrongARM comparator",
+  "references": [
+    {
+      "name": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+      "at": "toa.yaml:refs/0"
+    },
+    {
+      "name": "ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
+      "at": "toa.yaml:refs/1"
+    }
+  ],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "size": 219,
+      "blob": "287202b32bfbf6c281ed5497618766da90dcadf9",
+      "sha256": "76d9ed6bda7e2c3ac8e3d86da2922e1281e62cca55ccdde304eb4e7cd25940c6"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 229,
+      "blob": "0e01165dd39412c091821b3386bb133ced8ee119",
+      "sha256": "3a644fbca52dabf65c7dc49e5b0e391bf7725b2ab5c101daf1f3718e30f51e22"
+    }
+  ],
+  "locations": [
+    {
+      "library": "official-chen",
+      "path": "doc/strongarm-comp/kickback/doc_907ce675ba8c9de5c17d38c1af20c9d2f5b4f071",
+      "first_commit": "729a41f321c65a196092eb9d3b447afa17f3c9ff",
+      "first_date": "2026-11-09T08:30:00+08:00",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "doc/strongarm-comp/kickback/doc_907ce675ba8c9de5c17d38c1af20c9d2f5b4f071.source.jsonl",
+      "label": "strongarm-comp/kickback",
+      "latest": false
+    }
+  ],
+  "first": {
+    "library": "official-chen",
+    "commit": "729a41f321c65a196092eb9d3b447afa17f3c9ff",
+    "date": "2026-11-09T08:30:00+08:00",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [],
+  "base_by": [],
+  "newer": []
+}

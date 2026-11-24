@@ -1,0 +1,93 @@
+{
+  "toa-index": 2,
+  "name": "ifc_90b6278770a1aec49ef5716afd4eb8e298bb326b",
+  "prefix": "ifc",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "19b2e933daa2ba8285c2e34edca02e85d4035fdd09b74e352618058b1a1d58a4",
+  "manifest": {
+    "type": "ifc",
+    "license": "CC0-1.0",
+    "name": "cmp-physical-v14-pdk110-54",
+    "title": "cmp_physical_v14_pdk110_54",
+    "description": "Interface of the subcircuit cmp_physical_v14_pdk110_54 of pll.",
+    "pins": [
+      {
+        "name": "vp"
+      },
+      {
+        "name": "vn"
+      },
+      {
+        "name": "out"
+      },
+      {
+        "name": "vdd"
+      },
+      {
+        "name": "vss"
+      }
+    ]
+  },
+  "title": "cmp_physical_v14_pdk110_54",
+  "references": [],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "symbol.rnl",
+      "size": 382,
+      "blob": "355a3b4d8625988c9869e887d511472dc7ad5a9b",
+      "sha256": "2d809656e5c95e00ad5404013cedea727e5fe6b8e0c1715ea0f4dab494f92c0f"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 244,
+      "blob": "5990f03ccbdbd282d805b0949349af5fbc6c902f",
+      "sha256": "5f357080639b265e1f543844cbae1c264918817aec6f9424727ad459367072d9"
+    }
+  ],
+  "locations": [
+    {
+      "library": "pll",
+      "path": "ifc/cmp-physical-v14-pdk110-54/ifc_90b6278770a1aec49ef5716afd4eb8e298bb326b",
+      "first_commit": "f219140bd246581946ece2907beb9711de1c0a23",
+      "first_date": "2026-11-24T00:00:00Z",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ifc/cmp-physical-v14-pdk110-54/ifc_90b6278770a1aec49ef5716afd4eb8e298bb326b.source.jsonl",
+      "label": "cmp-physical-v14-pdk110-54",
+      "latest": true
+    }
+  ],
+  "first": {
+    "library": "pll",
+    "commit": "f219140bd246581946ece2907beb9711de1c0a23",
+    "date": "2026-11-24T00:00:00Z",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "ckt_2676eab4204171af41fa4f48a446d1d563e13b2b",
+      "at": "toa.yaml:ifc"
+    }
+  ],
+  "base_by": [],
+  "newer": []
+}

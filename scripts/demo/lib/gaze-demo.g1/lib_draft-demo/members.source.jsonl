@@ -1,0 +1,14 @@
+{"toa": "source/1"}
+{"object": "ifc_draft-inv", "label": "inv", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "ifc_draft-buf2", "label": "buf2", "license": "CC0-1.0", "group": "buf2", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "ckt_draft-inv-cmos", "label": "inv/cmos.g1", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "ckt_draft-inv-cmos-2", "label": "inv/cmos.g2", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "ckt_draft-inv-cmos-x2", "label": "inv/cmos-x2.g1", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "ckt_draft-inv-cmos-lp", "label": "inv/cmos-lp.g1", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "ckt_draft-buf2-inv", "label": "buf2/two-inv.g1", "license": "CC0-1.0", "group": "buf2", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "tb_draft-inv-char", "label": "inv/tb_inv_char.g1", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "evd_draft-inv-a", "label": "inv/20261118T0900Z-cmos-1v8", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "evd_draft-inv-b", "label": "inv/20261118T1000Z-cmos-1v8", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "evd_draft-inv-c", "label": "inv/20261118T1100Z-cmos-1v2", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "evd_draft-inv-d", "label": "inv/20261118T1200Z-cmos-x2-1v8", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "evd_draft-inv-e", "label": "inv/20261118T1300Z-cmos-lp-1v8", "license": "CC0-1.0", "group": "inv", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}

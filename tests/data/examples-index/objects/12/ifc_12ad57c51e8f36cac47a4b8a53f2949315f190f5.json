@@ -1,0 +1,174 @@
+{
+  "toa-index": 2,
+  "name": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+  "prefix": "ifc",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "ce080ce44be4cf54e7e1ffc06e3e26be61199de8d51aba37ea80ed9138add516",
+  "manifest": {
+    "type": "ifc",
+    "license": "CC0-1.0",
+    "name": "strongarm-comp",
+    "title": "StrongARM latched comparator",
+    "description": "Clocked comparator with a regenerative latch; the outputs are valid while clk is high.",
+    "pins": [
+      {
+        "name": "inp",
+        "kind": "analog",
+        "direction": "in"
+      },
+      {
+        "name": "inn",
+        "kind": "analog",
+        "direction": "in"
+      },
+      {
+        "name": "clk",
+        "kind": "digital",
+        "direction": "in"
+      },
+      {
+        "name": "outp",
+        "kind": "digital",
+        "direction": "out"
+      },
+      {
+        "name": "outn",
+        "kind": "digital",
+        "direction": "out"
+      },
+      {
+        "name": "vdd",
+        "kind": "supply"
+      },
+      {
+        "name": "vss",
+        "kind": "ground"
+      }
+    ]
+  },
+  "title": "StrongARM latched comparator",
+  "references": [],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "size": 150,
+      "blob": "1677766369327ebce96a9df5b6fc4f8729fc22a1",
+      "sha256": "f38b05fb641bd41602050e2ead40c245a167a2dbb5fcd2bfa3b9aceba2890b2d"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 468,
+      "blob": "bc937751e2157268fed1546d245d0a75848b6f05",
+      "sha256": "146216e5fa814825c3e12652802ebeafc59cc9db26a26f26243cb105c43d3611"
+    }
+  ],
+  "locations": [
+    {
+      "library": "official",
+      "path": "ifc/strongarm-comp/ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_date": "2026-11-01T09:00:00+08:00",
+      "first_signature": null,
+      "notes": [
+        {
+          "file": "20261103-clock.md",
+          "commit": "d83fc204f4a911e5b7cddcfe4996f9fd9cec5997",
+          "date": "2026-11-03T10:00:00+08:00",
+          "size": 113,
+          "text": "The outputs are reset high while `clk` is low, so a following stage should sample them only\nwhile `clk` is high.\n"
+        }
+      ],
+      "stamps": [],
+      "source_list": "ifc/strongarm-comp/ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5.source.jsonl",
+      "label": "strongarm-comp",
+      "latest": false
+    },
+    {
+      "library": "official-chen",
+      "path": "ifc/strongarm-comp/ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_date": "2026-11-01T09:00:00+08:00",
+      "first_signature": null,
+      "notes": [
+        {
+          "file": "20261103-clock.md",
+          "commit": "d83fc204f4a911e5b7cddcfe4996f9fd9cec5997",
+          "date": "2026-11-03T10:00:00+08:00",
+          "size": 113,
+          "text": "The outputs are reset high while `clk` is low, so a following stage should sample them only\nwhile `clk` is high.\n"
+        },
+        {
+          "file": "20261109-fork.md",
+          "commit": "729a41f321c65a196092eb9d3b447afa17f3c9ff",
+          "date": "2026-11-09T08:30:00+08:00",
+          "size": 57,
+          "text": "This fork adds sky130-lowkick.g1 and a note on kickback.\n"
+        }
+      ],
+      "stamps": [],
+      "source_list": "ifc/strongarm-comp/ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5.source.jsonl",
+      "label": "strongarm-comp",
+      "latest": false
+    }
+  ],
+  "first": {
+    "library": "official",
+    "commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+    "date": "2026-11-01T09:00:00+08:00",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "ckt_50231b67183e5ba6c367288e24e9a3c38756e3e8",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "ckt_ddeacf24a1ad98201f1e46b00ddcabd3e47da576",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "ckt_e9ae6546152d10f5ef21958edfa91b1e7c4faab7",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "doc_907ce675ba8c9de5c17d38c1af20c9d2f5b4f071",
+      "at": "toa.yaml:refs/0"
+    },
+    {
+      "name": "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
+      "at": "lock.json:tree/0/ifc"
+    },
+    {
+      "name": "lib_cf125e93948ecdee725718e666cf7aa1be126799",
+      "at": "members.source.jsonl:3/object"
+    },
+    {
+      "name": "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e",
+      "at": "toa.yaml:ifc"
+    }
+  ],
+  "base_by": [],
+  "newer": []
+}

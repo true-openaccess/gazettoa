@@ -1,0 +1,15 @@
+type: ckt
+license: CC0-1.0
+author: Gazettoa
+ifc: ifc_draft-inv
+name: cmos
+form: transistor
+description: The next generation of cmos, with a wider p-channel transistor for closer rise and fall times.
+tags: [demo]
+base: [ckt_draft-inv-cmos]
+specifications:
+  process: demo
+  vdd: {min: 1.1, nom: 1.8, max: 1.98, unit: V}
+files:
+  netlist:
+  - inv.sp

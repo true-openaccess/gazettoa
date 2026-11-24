@@ -1,0 +1,122 @@
+{
+  "toa-index": 2,
+  "name": "ckt_e9ae6546152d10f5ef21958edfa91b1e7c4faab7",
+  "prefix": "ckt",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "50465cc9372f0304ae16e3b8f283660da63a52803544a168a2999c4b7b96c436",
+  "manifest": {
+    "type": "ckt",
+    "license": "CC0-1.0",
+    "author": "Alice Zhang",
+    "ifc": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+    "name": "wrap-lee",
+    "form": "composition",
+    "description": "StrongARM comparator built from Lee's dynamic latch.",
+    "uses": {
+      "dyn_latch_cmp": {
+        "ifc": "ifc_4915f191ad95b57dd34a628ab49030a457d91398",
+        "ckt": "ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34"
+      }
+    },
+    "files": {
+      "netlist": [
+        "strongarm_comp.scs"
+      ]
+    }
+  },
+  "references": [
+    {
+      "name": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "ifc_4915f191ad95b57dd34a628ab49030a457d91398",
+      "at": "toa.yaml:uses/dyn_latch_cmp/ifc"
+    },
+    {
+      "name": "ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34",
+      "at": "toa.yaml:uses/dyn_latch_cmp/ckt"
+    }
+  ],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "strongarm_comp.scs",
+      "size": 192,
+      "blob": "5c624b332ede3fb63f06cdd770dda1b2c6006e47",
+      "sha256": "00eb6ff40503198719d4007cdb98250c77dbf1aac08c514a0a43739c0b1482ff"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 368,
+      "blob": "1748932e2068baccba3d85b6e617235695374c37",
+      "sha256": "c4c441da4f2b9c464bdc0133de6f2139e1b86946792133c0756d84442b72f9ed"
+    }
+  ],
+  "locations": [
+    {
+      "library": "alice",
+      "path": "ckt/strongarm-comp/wrap-lee.g1/ckt_e9ae6546152d10f5ef21958edfa91b1e7c4faab7",
+      "first_commit": "869d929f27975f289738e7b556e594c434cec0a0",
+      "first_date": "2026-11-10T12:00:00Z",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ckt/strongarm-comp/wrap-lee.g1/ckt_e9ae6546152d10f5ef21958edfa91b1e7c4faab7.source.jsonl",
+      "label": "strongarm-comp/wrap-lee.g1",
+      "latest": false
+    }
+  ],
+  "first": {
+    "library": "alice",
+    "commit": "869d929f27975f289738e7b556e594c434cec0a0",
+    "date": "2026-11-10T12:00:00Z",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
+      "at": "toa.yaml:dut"
+    },
+    {
+      "name": "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
+      "at": "lock.json:dut"
+    },
+    {
+      "name": "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
+      "at": "lock.json:tree/0/object"
+    }
+  ],
+  "base_by": [
+    "ckt_50231b67183e5ba6c367288e24e9a3c38756e3e8"
+  ],
+  "newer": [
+    {
+      "name": "ckt_50231b67183e5ba6c367288e24e9a3c38756e3e8",
+      "marked_by": [
+        "alice"
+      ],
+      "together": [
+        "alice"
+      ],
+      "ifc_changed": false
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+# Tests the builder of Gazettoa, the text it gives the RNL viewer, and builds a site from the
+# index that toa wrote for its small examples (tests/data/), so it needs no toa. Needs no secret and
+# names no organisation, so it runs unchanged in a fork. Paths are from the root of this repository.
+name: Gazettoa CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # the RNL command, to draw the symbols of interfaces: a core release, pinned by SHA-256
+  RNL_URL: https://github.com/rich-netlist/rnl/releases/download/core-v0.6.2/rnl-x86_64-unknown-linux-musl.tar.gz
+  RNL_SHA256: bba0575cd8c40d8973862e0d1740e4d860b9370aa14c3017005550de3d1415d7
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install rnl
+        run: |
+          sh scripts/install-tool.sh "$RNL_URL" "$RNL_SHA256" rnl "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: The text given to the RNL viewer (Node)
+        run: node --test tests/viewer_text.test.mjs
+      - name: Tests of the builder
+        run: python3 -m unittest discover -s tests -v
+      - name: The state of each translation (reported; a missing one never fails)
+        run: python3 scripts/i18n_keys.py
+      - name: A site from the examples' index
+        run: |
+          mkdir -p "$RUNNER_TEMP/instance"
+          cd builder
+          python3 -m gaze build --instance "$RUNNER_TEMP/instance" --index ../tests/data/examples-index \
+            --out "$RUNNER_TEMP/site" --offline
+          test -s "$RUNNER_TEMP/site/data/site.json"
+          test -s "$RUNNER_TEMP/site/llms.txt"
+          test -s "$RUNNER_TEMP/site/fonts/fonts.css"

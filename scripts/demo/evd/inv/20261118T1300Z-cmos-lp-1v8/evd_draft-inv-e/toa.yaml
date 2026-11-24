@@ -1,0 +1,17 @@
+type: evd
+kind: sim
+license: CC0-1.0
+author: Gazettoa
+dut: ckt_draft-inv-cmos-lp
+tbs: [tb_draft-inv-char]
+conditions:
+  parameters: {vdd: 1.8}
+  options: {temp: 27}
+  models:
+  - {file: demo.lib, section: tt}
+environment:
+  simulator: {name: ngspice, version: '44.2'}
+  analysis: {python: '3.12.3'}
+metrics:
+  tb_inv_char.tpd: 74.9
+  tb_inv_char.power: 1.9

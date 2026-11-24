@@ -1,0 +1,104 @@
+{
+  "toa-index": 2,
+  "name": "ckt_7544bbde7fdaef6fb3fa34e72a5c1ebe8aaf398d",
+  "prefix": "ckt",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "2ee872d6c29053298dc3be82664e7b583dbd80d1f45d2cde46df4b15ab626bae",
+  "manifest": {
+    "type": "ckt",
+    "license": "CC0-1.0",
+    "ifc": "ifc_c0dfe4e6bdb90696e0394568aa04a67a45ac6d4b",
+    "name": "pll",
+    "form": "transistor",
+    "description": "Netlist of the subcircuit pll_inv_pdk110_7 of pll.",
+    "files": {
+      "netlist": [
+        "07_pll_inv.scs"
+      ],
+      "packages": [
+        "pll_semantics.rnl"
+      ]
+    },
+    "specifications": {
+      "process": "tsmc180"
+    }
+  },
+  "references": [
+    {
+      "name": "ifc_c0dfe4e6bdb90696e0394568aa04a67a45ac6d4b",
+      "at": "toa.yaml:ifc"
+    }
+  ],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "07_pll_inv.scs",
+      "size": 2731,
+      "blob": "5ce882e70794fb78934d86040fa8f60635d7df3e",
+      "sha256": "cd9fbf0013cad7e07c99fc61e1ce35a9fd3896afe5d1a4314db35ca645fec5d3"
+    },
+    {
+      "path": "README.md",
+      "size": 378,
+      "blob": "0e4e32ed4c74ef4f0b560bc43ca286eec3610fe6",
+      "sha256": "c883eaf09632294251ed64c4f789e43c60bfbd82bb4a0e1d96f2ab52c06abcd5"
+    },
+    {
+      "path": "pll_semantics.rnl",
+      "size": 1317,
+      "blob": "323de049410b5979438f7039654520eeaf7ea317",
+      "sha256": "391c37718b02772aa5ee5b6c689e093c5fbb312cb6b5ecd320c84b03840b872b"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 276,
+      "blob": "b1638d6f302846a13bc6e6a754322c19a4e89ca7",
+      "sha256": "598208f193591a819256f79e6660228c8739f5f890609705f9b5c28f516bcdb7"
+    }
+  ],
+  "locations": [
+    {
+      "library": "pll",
+      "path": "ckt/pll-inv-pdk110-7/pll.g1/ckt_7544bbde7fdaef6fb3fa34e72a5c1ebe8aaf398d",
+      "first_commit": "f219140bd246581946ece2907beb9711de1c0a23",
+      "first_date": "2026-11-24T00:00:00Z",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ckt/pll-inv-pdk110-7/pll.g1/ckt_7544bbde7fdaef6fb3fa34e72a5c1ebe8aaf398d.source.jsonl",
+      "label": "pll-inv-pdk110-7/pll.g1",
+      "latest": true
+    }
+  ],
+  "first": {
+    "library": "pll",
+    "commit": "f219140bd246581946ece2907beb9711de1c0a23",
+    "date": "2026-11-24T00:00:00Z",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "ckt_2676eab4204171af41fa4f48a446d1d563e13b2b",
+      "at": "toa.yaml:uses/pll_inv_pdk110_7/ckt"
+    }
+  ],
+  "base_by": [],
+  "newer": []
+}

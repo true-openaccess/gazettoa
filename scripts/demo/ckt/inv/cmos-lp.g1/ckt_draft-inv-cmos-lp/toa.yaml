@@ -1,0 +1,15 @@
+type: ckt
+license: CC0-1.0
+author: Gazettoa
+ifc: ifc_draft-inv
+name: cmos-lp
+form: transistor
+description: The two transistors of cmos, with long channels, so slower at less power.
+tags: [demo]
+base: [ckt_draft-inv-cmos]
+specifications:
+  process: demo
+  vdd: {min: 1.1, nom: 1.8, max: 1.98, unit: V}
+files:
+  netlist:
+  - inv.sp

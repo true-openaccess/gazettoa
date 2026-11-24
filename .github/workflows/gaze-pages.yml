@@ -1,0 +1,158 @@
+# Builds the site of this instance from the libraries its workspace list includes
+# (instance/workspace.source.jsonl) and publishes it with GitHub Pages: every 30 minutes, by
+# hand, and when the instance or the site's code changes.
+#
+# Reading is incremental: the last index, the last site and toa's cache are kept in the Actions
+# cache, so a library whose commit did not move is skipped, and only new objects are read.
+# It needs no secret and names no organisation: the site's address comes from GitHub Pages. A fork
+# that edits instance/ and sets Settings > Pages > Source to "GitHub Actions" gets its own site.
+name: Gazettoa site
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - "instance/**"
+      - "builder/**"
+      - "web/**"
+      - "i18n/**"
+      - ".github/workflows/gaze-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# one build at a time; a build that is running is not cut off by the next
+concurrency:
+  group: gaze-pages
+  cancel-in-progress: false
+
+env:
+  # The reference tool toa has no release yet: it is built from its source, the repository
+  # TOA_REPO at the commit TOA_COMMIT (a full commit id), with the Rust version TOA_RUST. The
+  # executable is kept in the Actions cache under the commit and the Rust version, so each is built
+  # once. Until TOA_COMMIT is set, the build stops at the step that builds toa.
+  TOA_REPO: https://github.com/true-openaccess/toa
+  TOA_COMMIT: "d35501cc77524bcb19740cdd2926045d0c9f0207"
+  TOA_RUST: "1.97.1"
+  TOA_BIN: ${{ github.workspace }}/.toa-bin
+  # The RNL command, to draw the symbols of interfaces: a core release, pinned by SHA-256.
+  RNL_URL: https://github.com/rich-netlist/rnl/releases/download/core-v0.6.2/rnl-x86_64-unknown-linux-musl.tar.gz
+  RNL_SHA256: bba0575cd8c40d8973862e0d1740e4d860b9370aa14c3017005550de3d1415d7
+  TOA_CACHE: ${{ github.workspace }}/.work/toa-cache
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: The last index, site and cache of toa
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .work
+          key: gaze-${{ github.run_id }}
+          restore-keys: gaze-
+      # The site keeps records from build to build: when it first saw each object (seen.json, for
+      # the evidence of time of decision B35), objects that left a library (changes.json), what
+      # Software Heritage has archived (swh.json) and what GitHub said of signed commits
+      # (signatures.json). When the cache is gone they are taken back from the site as published,
+      # or the record of when each object was first seen would start again.
+      # A site never published (404) starts its records now; any other failure stops the build.
+      - name: When the cache is gone, take the records back from the published site
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          if [ -f .work/site/data/site.json ] || [ -z "$SITE_URL" ]; then exit 0; fi
+          mkdir -p .work/site/data
+          for f in site.json search.json changes.json seen.json swh.json signatures.json; do
+            code=$(curl -sS -L -o ".work/site/data/$f" -w '%{http_code}' "${SITE_URL%/}/data/$f" || echo 000)
+            case "$code" in
+              200) ;;
+              404) rm -f ".work/site/data/$f" ;;
+              *) echo "::error::Could not read ${SITE_URL%/}/data/$f (HTTP $code); the published site stays as it was."; exit 1 ;;
+            esac
+          done
+          # nothing published yet: no previous site
+          if [ ! -f .work/site/data/site.json ]; then rm -rf .work/site; fi
+      - name: Check TOA_COMMIT
+        run: |
+          case "$TOA_COMMIT" in
+            "") echo "::error::TOA_COMMIT is not set: name the commit of $TOA_REPO to build toa from (gaze-pages.yml, env). The published site stays as it was."; exit 1 ;;
+            *[!0-9a-f]*) echo "::error::TOA_COMMIT must be a full commit id in lower-case hexadecimal, not '$TOA_COMMIT'."; exit 1 ;;
+          esac
+          if [ ${#TOA_COMMIT} -ne 40 ]; then echo "::error::TOA_COMMIT must be a full commit id of 40 hexadecimal digits."; exit 1; fi
+      - name: The toa built from that commit before
+        id: toa-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .toa-bin
+          key: toa-bin-${{ env.TOA_COMMIT }}-rust-${{ env.TOA_RUST }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Build toa from its source
+        if: steps.toa-cache.outputs.cache-hit != 'true'
+        run: |
+          src="$RUNNER_TEMP/toa-src"
+          git init -q "$src"
+          git -C "$src" fetch -q --depth 1 "$TOA_REPO" "$TOA_COMMIT"
+          git -C "$src" -c advice.detachedHead=false checkout -q FETCH_HEAD
+          test "$(git -C "$src" rev-parse HEAD)" = "$TOA_COMMIT"
+          rustup toolchain install "$TOA_RUST" --profile minimal
+          (cd "$src" && cargo +"$TOA_RUST" build --release --locked -p toa-cli)
+          mkdir -p "$TOA_BIN"
+          install -m 755 "$src/target/release/toa" "$TOA_BIN/toa"
+      - name: Keep the toa built, for the next runs
+        if: steps.toa-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .toa-bin
+          key: ${{ steps.toa-cache.outputs.cache-primary-key }}
+      - name: Install rnl; put toa on PATH
+        run: |
+          sh scripts/install-tool.sh "$RNL_URL" "$RNL_SHA256" rnl "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          echo "$TOA_BIN" >> "$GITHUB_PATH"
+          "$TOA_BIN/toa" --version
+      - name: Read the libraries (toa index)
+        run: |
+          set +e
+          toa index --workspace instance/workspace.source.jsonl --out .work/index
+          code=$?
+          set -e
+          case "$code" in
+            0) ;;
+            4) echo "::warning::Some libraries could not be fetched this time; the site shows what was read of them before." ;;
+            *) echo "::error::toa index could not run (exit code $code); the published site stays as it was."; exit 1 ;;
+          esac
+      - name: Build the site
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+          # to ask GitHub whether the signed commits of libraries on github.com verified (read only)
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          cd builder
+          python3 -m gaze build --instance ../instance --index ../.work/index --out ../.work/site \
+            --toa "$(command -v toa)" --rnl "$(command -v rnl)" --site-url "$SITE_URL"
+      - name: Keep the index, site and cache of toa for the next run
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .work
+          key: gaze-${{ github.run_id }}
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: .work/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

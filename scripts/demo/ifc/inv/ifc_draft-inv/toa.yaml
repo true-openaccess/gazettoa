@@ -1,0 +1,10 @@
+type: ifc
+license: CC0-1.0
+name: inv
+title: Inverter
+description: A logic inverter, the smallest block of the demo library of Gazettoa.
+pins:
+- {name: a, kind: digital, direction: in}
+- {name: "y", kind: digital, direction: out}
+- {name: vdd, kind: supply}
+- {name: vss, kind: ground}

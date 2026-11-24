@@ -1,0 +1,14 @@
+type: ckt
+license: CC0-1.0
+author: Gazettoa
+ifc: ifc_draft-inv
+name: cmos
+form: transistor
+description: Two transistors of made-up models, with a drawing in RNL.
+tags: [demo]
+specifications:
+  process: demo
+  vdd: {min: 1.1, nom: 1.8, max: 1.98, unit: V}
+files:
+  netlist:
+  - inv.sp

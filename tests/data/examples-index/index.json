@@ -1,0 +1,57 @@
+{
+  "toa-index": 2,
+  "tool": "toa 0.1.0",
+  "standard": "0.1",
+  "built": "2026-11-23T23:07:24Z",
+  "libraries": [
+    {
+      "key": "official",
+      "address": "https://example.org/toa-examples/official.git",
+      "branch": "main",
+      "commit": "1eb83943316b5e309da64b87f852fb66faf506e0",
+      "date": "2026-11-04T09:30:00+08:00",
+      "objects": 4,
+      "readable": true
+    },
+    {
+      "key": "lee",
+      "address": "https://example.org/toa-examples/lee.git",
+      "branch": "main",
+      "commit": "445bab8c0d8861fc2566336a8eb9655d13532af3",
+      "date": "2026-11-14T14:00:00Z",
+      "objects": 2,
+      "readable": true
+    },
+    {
+      "key": "alice",
+      "address": "https://example.org/toa-examples/alice.git",
+      "branch": "main",
+      "commit": "ea2187be1e0c94fdff5d0e66af014c92f840e296",
+      "date": "2026-11-12T12:30:00Z",
+      "objects": 3,
+      "readable": true
+    },
+    {
+      "key": "official-chen",
+      "address": "https://example.org/toa-examples/official-chen.git",
+      "branch": "main",
+      "commit": "1e4b957cda0dc35f355b85ed6bafd705431a16fd",
+      "date": "2026-11-09T09:00:00+08:00",
+      "objects": 6,
+      "readable": true
+    }
+  ],
+  "counts": {
+    "objects": 11,
+    "valid": 11,
+    "names": 12
+  },
+  "alarms": [],
+  "same_files": {
+    "min_size": 256,
+    "common_groups": 5,
+    "common_authors": 5,
+    "common_cap": 200,
+    "listed": 50
+  }
+}

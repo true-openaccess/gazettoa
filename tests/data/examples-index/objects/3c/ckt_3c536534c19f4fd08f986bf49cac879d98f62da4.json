@@ -1,0 +1,32 @@
+{
+  "toa-index": 2,
+  "name": "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4",
+  "prefix": "ckt",
+  "present": false,
+  "history": {
+    "listed": []
+  },
+  "removals": [
+    {
+      "library": "lee",
+      "path": "ckt/dyn-latch-cmp/lee-sky130.g1/ckt_3c536534c19f4fd08f986bf49cac879d98f62da4.removed.json",
+      "commit": "445bab8c0d8861fc2566336a8eb9655d13532af3",
+      "date": "2026-11-14T14:00:00Z",
+      "valid": true,
+      "record": {
+        "toa": "removed/1",
+        "object": "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4",
+        "commit": "621753f5acab5e9ae14b5b8b447478cc86b2c4d4",
+        "path": "ckt/dyn-latch-cmp/lee-sky130.g1/ckt_3c536534c19f4fd08f986bf49cac879d98f62da4",
+        "license": "CC0-1.0",
+        "label": "dyn-latch-cmp/lee-sky130.g1",
+        "reason": "Superseded by lee-sky130.g2."
+      }
+    }
+  ],
+  "referenced_by": [],
+  "base_by": [
+    "ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34"
+  ],
+  "newer": []
+}

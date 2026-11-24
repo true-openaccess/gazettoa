@@ -1,0 +1,9 @@
+/* Symbol of the subcircuit pll_inv_pdk110_55 of pll. */
+@RNL(type="header") {
+  @VERSION("0.4");
+  @PACKAGE(name="pll-inv-pdk110-55-sym", version="0.1");
+  @USE-PACKAGE(name="rnl-std-all", version="0.4")
+}
+@RNL {
+  # @SELECT-INSTANCE(model="pll_inv_pdk110_55", recursive=true) => @SET-SYMBOL(terminals=[[1, "a"], [2, "y"]]) $INVERTER
+}

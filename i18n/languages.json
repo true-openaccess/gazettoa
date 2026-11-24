@@ -1,0 +1,31 @@
+{
+ "format": 1,
+ "default": "en",
+ "about": "The languages of Gazettoa's interface. The format follows i18n/languages.json of toa; the texts of the interface are t('English') calls in web/assets/*.js, and each language's catalog, i18n/<code>/web.json, is keyed by the English text (null: not translated yet, shown in English). Text in objects is never translated.",
+ "languages": [
+  {
+   "code": "en",
+   "name": "English",
+   "short": "EN",
+   "html_lang": "en",
+   "matches": [
+    "en"
+   ],
+   "status": "published"
+  },
+  {
+   "code": "zh",
+   "name": "简体中文",
+   "short": "中文",
+   "html_lang": "zh-CN",
+   "matches": [
+    "zh",
+    "zh-CN",
+    "zh-Hans",
+    "zh-SG",
+    "zh-MY"
+   ],
+   "status": "incubating"
+  }
+ ]
+}

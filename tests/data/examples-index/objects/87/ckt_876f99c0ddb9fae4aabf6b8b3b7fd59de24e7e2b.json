@@ -1,0 +1,107 @@
+{
+  "toa-index": 2,
+  "name": "ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
+  "prefix": "ckt",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "d2d5b00b8dc0a6f7bd9550b9c6622c66948edd0d821ef4a9568845448b115beb",
+  "manifest": {
+    "type": "ckt",
+    "license": "CC0-1.0",
+    "ifc": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+    "name": "sky130-razavi",
+    "form": "transistor",
+    "specifications": {
+      "process": "sky130"
+    },
+    "description": "The classic StrongARM latch.",
+    "files": {
+      "netlist": [
+        "strongarm_comp.scs"
+      ]
+    }
+  },
+  "references": [
+    {
+      "name": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+      "at": "toa.yaml:ifc"
+    }
+  ],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "strongarm_comp.scs",
+      "size": 560,
+      "blob": "513015eebb5ebea9bbffc8cff30146fe724d5e12",
+      "sha256": "e2714fb97f687434407ca55df196395b25267690acf808985bd238c16876d8ec"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 231,
+      "blob": "165a9a1e6f2e3beccac9a9965c9f3837b76ef236",
+      "sha256": "eaac7b5b1fe273983d53ad604986fe216f0e0634a3082a185e77de232fe1e561"
+    }
+  ],
+  "locations": [
+    {
+      "library": "official",
+      "path": "ckt/strongarm-comp/sky130-razavi.g1/ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
+      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_date": "2026-11-01T09:00:00+08:00",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ckt/strongarm-comp/sky130-razavi.g1/ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b.source.jsonl",
+      "label": "strongarm-comp/sky130-razavi.g1",
+      "latest": true
+    },
+    {
+      "library": "official-chen",
+      "path": "ckt/strongarm-comp/sky130-razavi.g1/ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
+      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_date": "2026-11-01T09:00:00+08:00",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ckt/strongarm-comp/sky130-razavi.g1/ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b.source.jsonl",
+      "label": "strongarm-comp/sky130-razavi.g1",
+      "latest": true
+    }
+  ],
+  "first": {
+    "library": "official",
+    "commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+    "date": "2026-11-01T09:00:00+08:00",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "doc_907ce675ba8c9de5c17d38c1af20c9d2f5b4f071",
+      "at": "toa.yaml:refs/1"
+    },
+    {
+      "name": "lib_cf125e93948ecdee725718e666cf7aa1be126799",
+      "at": "members.source.jsonl:2/object"
+    }
+  ],
+  "base_by": [
+    "ckt_ddeacf24a1ad98201f1e46b00ddcabd3e47da576"
+  ],
+  "newer": []
+}

@@ -1,0 +1,16 @@
+type: ckt
+license: CC0-1.0
+author: A. N. Other
+ifc: ifc_draft-inv
+name: cmos-copy
+form: transistor
+description: >-
+  The netlist of cmos.g1 copied byte for byte under another author, without base. It is published
+  a day after the others, and the site marks it: same files, lineage not declared (decision B35).
+tags: [demo]
+specifications:
+  process: demo
+  vdd: {min: 1.1, nom: 1.8, max: 1.98, unit: V}
+files:
+  netlist:
+  - inv.sp

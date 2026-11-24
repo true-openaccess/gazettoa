@@ -1,0 +1,117 @@
+{
+  "toa-index": 2,
+  "name": "ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34",
+  "prefix": "ckt",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "3c8fbc00849b593f8694686621a0f1298c288a25d53fc9ef073d66e9a14f8a74",
+  "manifest": {
+    "type": "ckt",
+    "license": "CC0-1.0",
+    "author": "Lee",
+    "ifc": "ifc_4915f191ad95b57dd34a628ab49030a457d91398",
+    "base": [
+      "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4"
+    ],
+    "name": "lee-sky130",
+    "form": "transistor",
+    "specifications": {
+      "process": "sky130"
+    },
+    "description": "A dynamic latch comparator with a wider input pair for less offset.",
+    "files": {
+      "netlist": [
+        "dyn_latch_cmp.scs"
+      ]
+    }
+  },
+  "references": [
+    {
+      "name": "ifc_4915f191ad95b57dd34a628ab49030a457d91398",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4",
+      "at": "toa.yaml:base/0"
+    }
+  ],
+  "base": [
+    "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4"
+  ],
+  "history": {
+    "listed": [
+      "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4"
+    ],
+    "verified": [
+      "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4"
+    ],
+    "declared": [],
+    "nearest": null,
+    "state": "verified",
+    "generation": 2,
+    "generation_state": "declared"
+  },
+  "files": [
+    {
+      "path": "dyn_latch_cmp.scs",
+      "size": 551,
+      "blob": "84c587e859d5adf8755c7af166304c0e3606ff19",
+      "sha256": "812409ff99b943d6e7ccaa7cfa8864821d56c51717b9caf4dd8da0eb2e14186d"
+    },
+    {
+      "path": "history.json",
+      "size": 93,
+      "blob": "a8f859a4a23d5f28c791519a69c586fe81175338",
+      "sha256": "230cad1ad1e896f67b5368598c6feebf3fdf7b70077d9d16356904305db2efb7"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 331,
+      "blob": "eac959deaf4db797cb842e47d147a7e972d59c6e",
+      "sha256": "d5fe18d3b984d158bac501998a76f41b210941a51109e41f1b5091e3ae567bb2"
+    }
+  ],
+  "locations": [
+    {
+      "library": "lee",
+      "path": "ckt/dyn-latch-cmp/lee-sky130.g2/ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34",
+      "first_commit": "09d658fc6bab00d35724ab0facf60a6162ebf538",
+      "first_date": "2026-11-08T14:00:00Z",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ckt/dyn-latch-cmp/lee-sky130.g2/ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34.source.jsonl",
+      "label": "dyn-latch-cmp/lee-sky130.g2",
+      "latest": true
+    }
+  ],
+  "first": {
+    "library": "lee",
+    "commit": "09d658fc6bab00d35724ab0facf60a6162ebf538",
+    "date": "2026-11-08T14:00:00Z",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "ckt_50231b67183e5ba6c367288e24e9a3c38756e3e8",
+      "at": "toa.yaml:uses/dyn_latch_cmp/ckt"
+    },
+    {
+      "name": "ckt_e9ae6546152d10f5ef21958edfa91b1e7c4faab7",
+      "at": "toa.yaml:uses/dyn_latch_cmp/ckt"
+    },
+    {
+      "name": "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
+      "at": "lock.json:tree/1/object"
+    }
+  ],
+  "base_by": [],
+  "newer": []
+}

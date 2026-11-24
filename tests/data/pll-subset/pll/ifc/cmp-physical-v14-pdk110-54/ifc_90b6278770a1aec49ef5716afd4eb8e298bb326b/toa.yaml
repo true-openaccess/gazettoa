@@ -1,0 +1,11 @@
+type: ifc
+license: CC0-1.0
+name: cmp-physical-v14-pdk110-54
+title: cmp_physical_v14_pdk110_54
+description: Interface of the subcircuit cmp_physical_v14_pdk110_54 of pll.
+pins:
+- {name: vp}
+- {name: vn}
+- {name: out}
+- {name: vdd}
+- {name: vss}

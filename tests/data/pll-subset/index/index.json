@@ -1,0 +1,30 @@
+{
+  "toa-index": 2,
+  "tool": "toa 0.1.0",
+  "standard": "0.1",
+  "built": "2026-11-23T23:07:32Z",
+  "libraries": [
+    {
+      "key": "pll",
+      "address": "https://example.org/pll-subset/pll.git",
+      "branch": "main",
+      "commit": "f219140bd246581946ece2907beb9711de1c0a23",
+      "date": "2026-11-24T00:00:00Z",
+      "objects": 6,
+      "readable": true
+    }
+  ],
+  "counts": {
+    "objects": 6,
+    "valid": 6,
+    "names": 6
+  },
+  "alarms": [],
+  "same_files": {
+    "min_size": 256,
+    "common_groups": 5,
+    "common_authors": 5,
+    "common_cap": 200,
+    "listed": 50
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "key": "pll",
+  "groups": [
+    "pll"
+  ],
+  "address": "https://example.org/pll-subset/pll.git",
+  "branch": "main",
+  "commit": "f219140bd246581946ece2907beb9711de1c0a23",
+  "date": "2026-11-24T00:00:00Z",
+  "previous": null,
+  "readable": true,
+  "library_yaml": null,
+  "includes": [],
+  "objects": [
+    "ckt_2676eab4204171af41fa4f48a446d1d563e13b2b",
+    "ckt_7544bbde7fdaef6fb3fa34e72a5c1ebe8aaf398d",
+    "ckt_915f0e3f6d0190f8767a9ee188b587bef3f4e0ea",
+    "ifc_90b6278770a1aec49ef5716afd4eb8e298bb326b",
+    "ifc_c0dfe4e6bdb90696e0394568aa04a67a45ac6d4b",
+    "ifc_fb949e83c8b4b19b98c57d8fcbf49b8bb8f6fb84"
+  ],
+  "removed": [],
+  "problems": []
+}

@@ -1,0 +1,22 @@
+{
+  "key": "official",
+  "groups": [
+    "official"
+  ],
+  "address": "https://example.org/toa-examples/official.git",
+  "branch": "main",
+  "commit": "1eb83943316b5e309da64b87f852fb66faf506e0",
+  "date": "2026-11-04T09:30:00+08:00",
+  "previous": null,
+  "readable": true,
+  "library_yaml": null,
+  "includes": [],
+  "objects": [
+    "ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
+    "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+    "lib_cf125e93948ecdee725718e666cf7aa1be126799",
+    "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e"
+  ],
+  "removed": [],
+  "problems": []
+}

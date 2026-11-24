@@ -1,0 +1,23 @@
+{
+  "toa": "lock/1",
+  "dut": "ckt_draft-inv-cmos-x2",
+  "tbs": [
+    {
+      "object": "tb_draft-inv-char",
+      "files": {
+        "analyze.py": "70adb5a766369bf2c2cc0cadcc8bea055989ac48f462c77688b367553c16b209",
+        "tb.sp": "70ab8cde7cfef5270f185e30b1c80391148c8c84a2b3a13387a20e26d870a2ee"
+      }
+    }
+  ],
+  "tree": [
+    {
+      "path": "",
+      "object": "ckt_draft-inv-cmos-x2",
+      "ifc": "ifc_draft-inv",
+      "files": {
+        "inv.sp": "c883dc42d869aef888254406e7548a445dc919e68750fdd572781501a84b4272"
+      }
+    }
+  ]
+}

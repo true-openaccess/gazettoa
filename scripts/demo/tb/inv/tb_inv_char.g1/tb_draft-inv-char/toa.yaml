@@ -1,0 +1,18 @@
+type: tb
+license: CC0-1.0
+author: Gazettoa
+ifc: ifc_draft-inv
+name: tb_inv_char
+title: Delay and power, driving a fan-out of four
+files:
+  netlist:
+  - tb.sp
+simulators:
+- {name: ngspice, version: '42'}
+run: ngspice -b tb.sp -o meas.txt
+analyze: {entry: analyze.py, python: '>=3.10'}
+metrics:
+- {id: tpd, unit: ps, better: lower, tolerance: {rel: 0.05}, description: Delay from the input rising to the output falling}
+- {id: power, unit: uW, better: lower, tolerance: {rel: 0.05}, description: Average power from the supply}
+parameters:
+  vdd: {unit: V, description: Supply voltage}

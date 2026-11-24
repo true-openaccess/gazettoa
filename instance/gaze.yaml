@@ -1,0 +1,18 @@
+# The settings of this instance of Gazettoa. The libraries it includes are in
+# workspace.source.jsonl beside this file: one include line per library (TOA 8.1).
+# This file holds only what TOA does not; every key may be left out.
+schema: gaze/instance/1
+title: Gazettoa
+description: The official instance of Gazettoa, the read-only browser for TOA libraries. It reads two demo libraries for now, pll and risca.
+# site_url: the address the site is published at. Left out, it is taken from GitHub Actions
+# (https://<owner>.github.io/<repository>/), so a fork needs no change.
+# viewer_url: https://rich-netlist.github.io/rnl/viewer/
+# hosts: how files are reached on a host that is not github.com, gitlab.com or codeberg.org
+#   git.example.org:
+#     raw: "https://git.example.org/{repo}/raw/{commit}/{path}"
+#     web: "https://git.example.org/{repo}/tree/{commit}/{path}"
+# software_heritage_check: true   # ask Software Heritage which objects it has archived (off by default)
+# github_signature_check: false   # do not ask GitHub whether signed commits verified (asked by
+#   default when the build has a token in GITHUB_TOKEN, as in GitHub Actions)
+# libraries: per library, by its key (the group of its include line)
+#   some-library: {raw: copy}    # copy its files into the site instead of fetching them

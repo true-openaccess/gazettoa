@@ -1,0 +1,17 @@
+// The symbol of the interface inv, for the netlists that draw its instances.
+// @RNL(type="header") { @VERSION("0.4"); @PACKAGE(name="inv-sym", version="1.0"); }
+// @RNL {
+//   $INV = @DEFINE-SYMBOL {
+//     %a = (-4, 0) @PIN(terminal="a", direction="left");
+//     %y = (4, 0) @PIN(terminal="y", direction="right");
+//     %vdd = (0, 2) @PIN(terminal="vdd", direction="up");
+//     %vss = (0, -2) @PIN(terminal="vss", direction="down");
+//     @LINE {(-4, 0) (-2, 0)};
+//     @LINE {(-2, 2) (2, 0) (-2, -2) (-2, 2)};
+//     (2.5, 0) @CIRCLE(radius=0.5);
+//     @LINE {(3, 0) (4, 0)};
+//     @LINE {(0, 1) (0, 2)};
+//     @LINE {(0, -1) (0, -2)};
+//     ? @TEXT("${name}", key="name") => @PLACE(-2, 2.5);
+//   };
+// }

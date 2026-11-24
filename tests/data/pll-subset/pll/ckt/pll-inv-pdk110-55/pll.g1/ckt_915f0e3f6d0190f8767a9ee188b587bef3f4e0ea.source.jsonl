@@ -1,0 +1,3 @@
+{"toa": "source/1"}
+{"object": "ckt_915f0e3f6d0190f8767a9ee188b587bef3f4e0ea", "label": "pll-inv-pdk110-55/pll.g1", "refs": ["ifc_fb949e83c8b4b19b98c57d8fcbf49b8bb8f6fb84"], "license": "CC0-1.0", "sources": [{"git": "https://example.org/pll-subset/pll.git", "path": "ckt/pll-inv-pdk110-55/pll.g1/ckt_915f0e3f6d0190f8767a9ee188b587bef3f4e0ea"}]}
+{"object": "ifc_fb949e83c8b4b19b98c57d8fcbf49b8bb8f6fb84", "label": "pll-inv-pdk110-55", "license": "CC0-1.0", "sources": [{"git": "https://example.org/pll-subset/pll.git", "path": "ifc/pll-inv-pdk110-55/ifc_fb949e83c8b4b19b98c57d8fcbf49b8bb8f6fb84"}]}

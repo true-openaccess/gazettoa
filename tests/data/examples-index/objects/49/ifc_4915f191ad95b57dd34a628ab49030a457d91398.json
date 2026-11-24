@@ -1,0 +1,117 @@
+{
+  "toa-index": 2,
+  "name": "ifc_4915f191ad95b57dd34a628ab49030a457d91398",
+  "prefix": "ifc",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "406d347d1841bab5fc3d54368447d1415447ddf2617753f724a4ae8713b47d67",
+  "manifest": {
+    "type": "ifc",
+    "license": "CC0-1.0",
+    "name": "dyn-latch-cmp",
+    "title": "Dynamic latch comparator",
+    "description": "A comparator of one dynamic latch stage.",
+    "pins": [
+      {
+        "name": "inp",
+        "kind": "analog",
+        "direction": "in"
+      },
+      {
+        "name": "inn",
+        "kind": "analog",
+        "direction": "in"
+      },
+      {
+        "name": "clk",
+        "kind": "digital",
+        "direction": "in"
+      },
+      {
+        "name": "outp",
+        "kind": "digital",
+        "direction": "out"
+      },
+      {
+        "name": "outn",
+        "kind": "digital",
+        "direction": "out"
+      },
+      {
+        "name": "vdd",
+        "kind": "supply"
+      },
+      {
+        "name": "vss",
+        "kind": "ground"
+      }
+    ]
+  },
+  "title": "Dynamic latch comparator",
+  "references": [],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "toa.yaml",
+      "size": 417,
+      "blob": "1636ed44d2150ce32f8ab76b06eb46d3080a6e18",
+      "sha256": "f87c68668d30ed03dd6e0e01086b140f31553436ebce3188d7ed7f5b1e3ca36d"
+    }
+  ],
+  "locations": [
+    {
+      "library": "lee",
+      "path": "ifc/dyn-latch-cmp/ifc_4915f191ad95b57dd34a628ab49030a457d91398",
+      "first_commit": "93adacf587eb946410b6e916300b3e5605407573",
+      "first_date": "2026-11-05T14:00:00Z",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ifc/dyn-latch-cmp/ifc_4915f191ad95b57dd34a628ab49030a457d91398.source.jsonl",
+      "label": "dyn-latch-cmp",
+      "latest": false
+    }
+  ],
+  "first": {
+    "library": "lee",
+    "commit": "93adacf587eb946410b6e916300b3e5605407573",
+    "date": "2026-11-05T14:00:00Z",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "ckt_50231b67183e5ba6c367288e24e9a3c38756e3e8",
+      "at": "toa.yaml:uses/dyn_latch_cmp/ifc"
+    },
+    {
+      "name": "ckt_e9ae6546152d10f5ef21958edfa91b1e7c4faab7",
+      "at": "toa.yaml:uses/dyn_latch_cmp/ifc"
+    },
+    {
+      "name": "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
+      "at": "lock.json:tree/1/ifc"
+    }
+  ],
+  "base_by": [],
+  "newer": []
+}

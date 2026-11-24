@@ -1,0 +1,94 @@
+{
+  "toa-index": 2,
+  "name": "ifc_c0dfe4e6bdb90696e0394568aa04a67a45ac6d4b",
+  "prefix": "ifc",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "b8568f7887c8e3f2f0c6477536f66594f0c3bb1da22cb6dd4fd64eda45fbc7bc",
+  "manifest": {
+    "type": "ifc",
+    "license": "CC0-1.0",
+    "name": "pll-inv-pdk110-7",
+    "title": "pll_inv_pdk110_7",
+    "description": "Interface of the subcircuit pll_inv_pdk110_7 of pll.",
+    "pins": [
+      {
+        "name": "a"
+      },
+      {
+        "name": "y"
+      },
+      {
+        "name": "vdd"
+      },
+      {
+        "name": "vss"
+      }
+    ]
+  },
+  "title": "pll_inv_pdk110_7",
+  "references": [],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "symbol.rnl",
+      "size": 334,
+      "blob": "9bdd6c893191bfd6103adf5973ea111142dc0ad8",
+      "sha256": "6175c62b9ab56a773549d7e84754e6d24fcd8b945ebca73278c140bae0845e2e"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 200,
+      "blob": "4e276923d997cabfb64510a28a7f77f7f8b88b28",
+      "sha256": "e21317312793b5032a5261711d9bc54890de4c219641a664a721c590dbbe532a"
+    }
+  ],
+  "locations": [
+    {
+      "library": "pll",
+      "path": "ifc/pll-inv-pdk110-7/ifc_c0dfe4e6bdb90696e0394568aa04a67a45ac6d4b",
+      "first_commit": "f219140bd246581946ece2907beb9711de1c0a23",
+      "first_date": "2026-11-24T00:00:00Z",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ifc/pll-inv-pdk110-7/ifc_c0dfe4e6bdb90696e0394568aa04a67a45ac6d4b.source.jsonl",
+      "label": "pll-inv-pdk110-7",
+      "latest": true
+    }
+  ],
+  "first": {
+    "library": "pll",
+    "commit": "f219140bd246581946ece2907beb9711de1c0a23",
+    "date": "2026-11-24T00:00:00Z",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "ckt_2676eab4204171af41fa4f48a446d1d563e13b2b",
+      "at": "toa.yaml:uses/pll_inv_pdk110_7/ifc"
+    },
+    {
+      "name": "ckt_7544bbde7fdaef6fb3fa34e72a5c1ebe8aaf398d",
+      "at": "toa.yaml:ifc"
+    }
+  ],
+  "base_by": [],
+  "newer": []
+}

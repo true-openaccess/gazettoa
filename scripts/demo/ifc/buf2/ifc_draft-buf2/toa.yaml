@@ -1,0 +1,10 @@
+type: ifc
+license: CC0-1.0
+name: buf2
+title: Buffer of two inverters
+description: Two inverters in a row; its circuit is made of the circuit of inv.
+pins:
+- {name: a, kind: digital, direction: in}
+- {name: "y", kind: digital, direction: out}
+- {name: vdd, kind: supply}
+- {name: vss, kind: ground}

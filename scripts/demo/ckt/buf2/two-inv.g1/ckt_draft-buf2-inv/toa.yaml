@@ -1,0 +1,14 @@
+type: ckt
+license: CC0-1.0
+author: Gazettoa
+ifc: ifc_draft-buf2
+name: two-inv
+form: composition
+description: Two instances of inv, drawn with the symbol of the interface inv.
+uses:
+  inv:
+    ifc: ifc_draft-inv
+    ckt: ckt_draft-inv-cmos
+files:
+  netlist:
+  - buf2.sp

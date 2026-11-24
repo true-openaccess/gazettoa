@@ -1,0 +1,125 @@
+{
+  "toa-index": 2,
+  "name": "ckt_2676eab4204171af41fa4f48a446d1d563e13b2b",
+  "prefix": "ckt",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "994126c4891b5c1abd1ec40e48f71866e5a6f31bef5314493c310f1485f08c0c",
+  "manifest": {
+    "type": "ckt",
+    "license": "CC0-1.0",
+    "ifc": "ifc_90b6278770a1aec49ef5716afd4eb8e298bb326b",
+    "name": "pll",
+    "form": "transistor",
+    "description": "Netlist of the subcircuit cmp_physical_v14_pdk110_54 of pll.",
+    "files": {
+      "netlist": [
+        "54_cmp_physical_v14.scs"
+      ],
+      "packages": [
+        "pll_semantics.rnl"
+      ]
+    },
+    "uses": {
+      "pll_inv_pdk110_55": {
+        "ifc": "ifc_fb949e83c8b4b19b98c57d8fcbf49b8bb8f6fb84",
+        "ckt": "ckt_915f0e3f6d0190f8767a9ee188b587bef3f4e0ea"
+      },
+      "pll_inv_pdk110_7": {
+        "ifc": "ifc_c0dfe4e6bdb90696e0394568aa04a67a45ac6d4b",
+        "ckt": "ckt_7544bbde7fdaef6fb3fa34e72a5c1ebe8aaf398d"
+      }
+    },
+    "specifications": {
+      "process": "tsmc180"
+    }
+  },
+  "references": [
+    {
+      "name": "ifc_90b6278770a1aec49ef5716afd4eb8e298bb326b",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "ifc_fb949e83c8b4b19b98c57d8fcbf49b8bb8f6fb84",
+      "at": "toa.yaml:uses/pll_inv_pdk110_55/ifc"
+    },
+    {
+      "name": "ckt_915f0e3f6d0190f8767a9ee188b587bef3f4e0ea",
+      "at": "toa.yaml:uses/pll_inv_pdk110_55/ckt"
+    },
+    {
+      "name": "ifc_c0dfe4e6bdb90696e0394568aa04a67a45ac6d4b",
+      "at": "toa.yaml:uses/pll_inv_pdk110_7/ifc"
+    },
+    {
+      "name": "ckt_7544bbde7fdaef6fb3fa34e72a5c1ebe8aaf398d",
+      "at": "toa.yaml:uses/pll_inv_pdk110_7/ckt"
+    }
+  ],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "54_cmp_physical_v14.scs",
+      "size": 5757,
+      "blob": "6c863df2bad53ee89415847bf4a5ef2840440acc",
+      "sha256": "e72bcd1ef6100c9e7512eac9d989d0e4dd20207de8ee4c4bcbcd5f7fbcbc10ed"
+    },
+    {
+      "path": "README.md",
+      "size": 482,
+      "blob": "15c533df40a478bf420a144469977c5fa4af7149",
+      "sha256": "70bb796d622b17b786282df33cae76470bd5d3ebe9d05d9829ef644ad5c76cc7"
+    },
+    {
+      "path": "pll_semantics.rnl",
+      "size": 1621,
+      "blob": "a066e970c409068749097558fa2c16b5492b0f79",
+      "sha256": "f3445e7c7bf084aa482aedc6841137741d4912aa74cac131d40859a90f9c815c"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 558,
+      "blob": "7be11dc2381148aca421a234497b143c73f00c94",
+      "sha256": "e61f669ff96be2d64333e0f21b6cdf664df0680ed670f14dbcf093b64e68f01b"
+    }
+  ],
+  "locations": [
+    {
+      "library": "pll",
+      "path": "ckt/cmp-physical-v14-pdk110-54/pll.g1/ckt_2676eab4204171af41fa4f48a446d1d563e13b2b",
+      "first_commit": "f219140bd246581946ece2907beb9711de1c0a23",
+      "first_date": "2026-11-24T00:00:00Z",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "ckt/cmp-physical-v14-pdk110-54/pll.g1/ckt_2676eab4204171af41fa4f48a446d1d563e13b2b.source.jsonl",
+      "label": "cmp-physical-v14-pdk110-54/pll.g1",
+      "latest": true
+    }
+  ],
+  "first": {
+    "library": "pll",
+    "commit": "f219140bd246581946ece2907beb9711de1c0a23",
+    "date": "2026-11-24T00:00:00Z",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [],
+  "base_by": [],
+  "newer": []
+}

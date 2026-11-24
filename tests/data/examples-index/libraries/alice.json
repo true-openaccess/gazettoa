@@ -1,0 +1,42 @@
+{
+  "key": "alice",
+  "groups": [
+    "alice"
+  ],
+  "address": "https://example.org/toa-examples/alice.git",
+  "branch": "main",
+  "commit": "ea2187be1e0c94fdff5d0e66af014c92f840e296",
+  "date": "2026-11-12T12:30:00Z",
+  "previous": null,
+  "readable": true,
+  "library_yaml": null,
+  "includes": [
+    {
+      "from": "library.source.jsonl",
+      "include": "library.source.jsonl",
+      "group": "official",
+      "sources": [
+        {
+          "git": "https://example.org/toa-examples/official.git"
+        }
+      ]
+    },
+    {
+      "from": "library.source.jsonl",
+      "include": "library.source.jsonl",
+      "group": "lee",
+      "sources": [
+        {
+          "git": "https://example.org/toa-examples/lee.git"
+        }
+      ]
+    }
+  ],
+  "objects": [
+    "ckt_50231b67183e5ba6c367288e24e9a3c38756e3e8",
+    "ckt_e9ae6546152d10f5ef21958edfa91b1e7c4faab7",
+    "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85"
+  ],
+  "removed": [],
+  "problems": []
+}

@@ -1,0 +1,18 @@
+// The symbol of the interface buf2.
+// @RNL(type="header") { @VERSION("0.4"); @PACKAGE(name="buf2-sym", version="1.0"); }
+// @RNL {
+//   $BUF2 = @DEFINE-SYMBOL {
+//     %a = (-6, 0) @PIN(terminal="a", direction="left");
+//     %y = (6, 0) @PIN(terminal="y", direction="right");
+//     %vdd = (0, 4) @PIN(terminal="vdd", direction="up");
+//     %vss = (0, -4) @PIN(terminal="vss", direction="down");
+//     (0, 0) @RECTANGLE(width=8, height=6);
+//     @LINE {(-6, 0) (-4, 0)};
+//     @LINE {(4, 0) (6, 0)};
+//     @LINE {(0, 3) (0, 4)};
+//     @LINE {(0, -3) (0, -4)};
+//     @LINE {(-3, 1) (-1, 0) (-3, -1) (-3, 1)};
+//     @LINE {(0, 1) (2, 0) (0, -1) (0, 1)};
+//     ? @TEXT("${name}", key="name") => @PLACE(-4, 3.5);
+//   };
+// }

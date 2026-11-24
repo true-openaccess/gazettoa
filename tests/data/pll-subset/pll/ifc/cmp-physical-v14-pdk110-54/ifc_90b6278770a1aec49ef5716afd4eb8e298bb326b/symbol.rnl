@@ -1,0 +1,9 @@
+/* Symbol of the subcircuit cmp_physical_v14_pdk110_54 of pll. */
+@RNL(type="header") {
+  @VERSION("0.4");
+  @PACKAGE(name="cmp-physical-v14-pdk110-54-sym", version="0.1");
+  @USE-PACKAGE(name="rnl-std-all", version="0.4")
+}
+@RNL {
+  # @SELECT-INSTANCE(model="cmp_physical_v14_pdk110_54", recursive=true) => @SET-SYMBOL(terminals=[[1, "inp"], [2, "inn"], [3, "out"]]) $COMPARATOR
+}

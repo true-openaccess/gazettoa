@@ -1,0 +1,139 @@
+{
+  "toa-index": 2,
+  "name": "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e",
+  "prefix": "tb",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "91df22fe3c07566fb46ce11183a1d862c6f7a16519a6b8412c58172ed26e13cd",
+  "manifest": {
+    "type": "tb",
+    "license": "CC0-1.0",
+    "ifc": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+    "name": "tb_offset",
+    "title": "Input-referred offset by a slow ramp",
+    "files": {
+      "netlist": [
+        "tb.scs"
+      ]
+    },
+    "simulators": [
+      {
+        "name": "spectre",
+        "version": "21.1"
+      }
+    ],
+    "run": "spectre tb.scs +aps -format psfxl -raw psf",
+    "analyze": {
+      "entry": "analyze.py",
+      "python": ">=3.10"
+    },
+    "metrics": [
+      {
+        "id": "offset",
+        "unit": "mV",
+        "better": "lower",
+        "tolerance": {
+          "abs": 0.2
+        }
+      }
+    ],
+    "parameters": {
+      "vdd": {
+        "unit": "V",
+        "description": "Supply voltage"
+      }
+    }
+  },
+  "title": "Input-referred offset by a slow ramp",
+  "references": [
+    {
+      "name": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+      "at": "toa.yaml:ifc"
+    }
+  ],
+  "base": [],
+  "history": {
+    "listed": [],
+    "verified": [],
+    "declared": [],
+    "nearest": null,
+    "state": "none",
+    "generation": 1,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "analyze.py",
+      "size": 186,
+      "blob": "b50b4bda5884f783f95dcdd23534826824a001b5",
+      "sha256": "e71c2dee2242150320f408297bf273a2fcefb35a820254c66f2c0dbe7cfe8079"
+    },
+    {
+      "path": "tb.scs",
+      "size": 392,
+      "blob": "a9409beaa2b2c43e113c5b25cb8d3e74391831a4",
+      "sha256": "f6fbca7aecad6d5e22813f649dd77a898aa9cbab586e990a31097f026ed1f5bc"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 437,
+      "blob": "6eb4ec678f1f1cbc3273a0a3b506ace11e49ebe7",
+      "sha256": "8bc8d4c4ccdec87e355736208ee80e56c1dc9db7ad4a163804392adbeba0a7a9"
+    }
+  ],
+  "locations": [
+    {
+      "library": "official",
+      "path": "tb/strongarm-comp/tb_offset.g1/tb_da7445c069776f4e59f7a9c0ca974ed421b4205e",
+      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_date": "2026-11-01T09:00:00+08:00",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "tb/strongarm-comp/tb_offset.g1/tb_da7445c069776f4e59f7a9c0ca974ed421b4205e.source.jsonl",
+      "label": "strongarm-comp/tb_offset.g1",
+      "latest": true
+    },
+    {
+      "library": "official-chen",
+      "path": "tb/strongarm-comp/tb_offset.g1/tb_da7445c069776f4e59f7a9c0ca974ed421b4205e",
+      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_date": "2026-11-01T09:00:00+08:00",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "tb/strongarm-comp/tb_offset.g1/tb_da7445c069776f4e59f7a9c0ca974ed421b4205e.source.jsonl",
+      "label": "strongarm-comp/tb_offset.g1",
+      "latest": true
+    }
+  ],
+  "first": {
+    "library": "official",
+    "commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+    "date": "2026-11-01T09:00:00+08:00",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [
+    {
+      "name": "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
+      "at": "toa.yaml:tbs/0"
+    },
+    {
+      "name": "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
+      "at": "lock.json:tbs/0/object"
+    },
+    {
+      "name": "lib_cf125e93948ecdee725718e666cf7aa1be126799",
+      "at": "members.source.jsonl:4/object"
+    }
+  ],
+  "base_by": [],
+  "newer": []
+}
