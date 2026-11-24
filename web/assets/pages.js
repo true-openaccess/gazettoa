@@ -348,9 +348,11 @@ export async function pageHome() {
   const s = S.site;
   const c = s.counts;
   const stat = (n, label, href = "") => (href ? `<a class="stat" href="${href}"><b>${n}</b><span>${esc(label)}</span></a>` : `<div class="stat"><b>${n}</b><span>${esc(label)}</span></div>`);
+  // the top bar names the instance; the home page says what Gazettoa is, and links TOA's site when
+  // the instance names it (gaze.yaml, toa_site)
+  const toa = /^https?:\/\//.test(s.toa_site || "") ? `<a class="hero-link" href="${esc(s.toa_site)}" target="_blank" rel="noopener noreferrer">${esc(t("About TOA"))} ↗</a>` : "";
   const hero = `<section class="hero"><div class="hero-top"><div class="hero-main">
-    <h1>${esc(s.title)}</h1>
-    <p class="subtitle">${esc(t("The Gazetteer of TOA libraries"))}</p>
+    <div class="hero-title"><h1>${esc(t("The Gazetteer of TOA libraries"))}</h1>${toa}</div>
     <p class="lede">${esc(s.description || t("A read-only browser for TOA libraries. Every object here is read from the libraries below and checked by toa; the files stay in the libraries."))}</p>
     <div class="stats">${stat(c.libraries, t("Libraries"))}${stat(c.ifc, t("Interfaces"), "#/search?p=ifc")}${stat(c.ckt, t("Circuits"), "#/search?p=ckt")}${stat(c.tb, t("Testbenches"), "#/search?p=tb")}${stat(c.evd, t("Evidence records"), "#/search?p=evd")}${stat(c.doc, t("Documents"), "#/search?p=doc")}${c.lib ? stat(c.lib, t("Frozen libraries"), "#/search?p=lib") : ""}</div>
   </div></div></section>`;

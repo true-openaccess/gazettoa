@@ -93,6 +93,16 @@ class Config(unittest.TestCase):
             with self.assertRaises(config.ConfigError):
                 config.load(Path(d))
 
+    def test_toa_site_is_an_address_on_the_web(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(config.load(Path(d)).toa_site, "")   # left out: no link on the home page
+            (Path(d) / "gaze.yaml").write_bytes(b"toa_site: https://x.example/toa/\n")
+            self.assertEqual(config.load(Path(d)).toa_site, "https://x.example/toa/")
+            for bad in (b"toa_site: javascript:alert(1)\n", b"toa_site: x.example/toa\n", b"toa_site: 3\n"):
+                (Path(d) / "gaze.yaml").write_bytes(bad)
+                with self.subTest(text=bad), self.assertRaises(config.ConfigError):
+                    config.load(Path(d))
+
     def test_addresses(self):
         self.assertEqual(config.split_address("https://github.com/a/b.git"), ("github.com", "a/b"))
         self.assertEqual(config.split_address("git@github.com:a/b.git"), ("github.com", "a/b"))
@@ -416,6 +426,7 @@ class Build(unittest.TestCase):
         self.assertEqual((r["libraries"], r["ifcs"], r["groups"]), (4, 2, 1))
         site = load(out / "data" / "site.json")
         self.assertEqual(site["format"], "gaze-site/1")
+        self.assertEqual(site["toa_site"], "")   # the instance of the tests names no site of TOA
         from gaze import fields
         self.assertEqual(site["types"], fields.TYPES)   # the page maps prefixes through this
         self.assertEqual(site["counts"]["objects"], 11)

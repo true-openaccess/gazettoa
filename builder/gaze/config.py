@@ -160,6 +160,7 @@ class Config:
     description: str = ""
     site_url: str = ""
     viewer_url: str = "https://rich-netlist.github.io/rnl/viewer/"
+    toa_site: str = ""            # the site of TOA, linked from the home page; no link when empty
     hosts: dict[str, dict[str, str]] = field(default_factory=lambda: {k: dict(v) for k, v in DEFAULT_HOSTS.items()})
     libraries: dict[str, dict] = field(default_factory=dict)
     repository: str = ""          # where this instance's own code lives, for the footer; from Actions
@@ -195,18 +196,21 @@ def load(instance: Path, site_url: str | None = None) -> Config:
     if path.is_file():
         data = parse_yaml_subset(path.read_text(encoding="utf-8"), str(path.name))
         cfg.source = path
-        known = {"schema", "title", "description", "site_url", "viewer_url", "hosts", "libraries",
+        known = {"schema", "title", "description", "site_url", "viewer_url", "toa_site", "hosts", "libraries",
                  "software_heritage_check", "github_signature_check"}
         for k in data:
             if k not in known:
                 raise ConfigError(f"{CONFIG_FILE}: unknown key {k!r}; known: {', '.join(sorted(known))}")
         if data.get("schema") not in (None, "gaze/instance/1"):
             raise ConfigError(f"{CONFIG_FILE}: schema is gaze/instance/1, not {data.get('schema')!r}")
-        for k in ("title", "description", "site_url", "viewer_url"):
+        for k in ("title", "description", "site_url", "viewer_url", "toa_site"):
             if data.get(k) is not None:
                 if not isinstance(data[k], str):
                     raise ConfigError(f"{CONFIG_FILE}: {k} is a string")
                 setattr(cfg, k, data[k])
+        # a link on the home page: an address on the web, never a script
+        if cfg.toa_site and not re.match(r"^https?://[^\s\"'<>]+$", cfg.toa_site):
+            raise ConfigError(f"{CONFIG_FILE}: toa_site is an address that starts with https://, not {cfg.toa_site!r}")
         for k in ("software_heritage_check", "github_signature_check"):
             if data.get(k) is not None:
                 if not isinstance(data[k], bool):

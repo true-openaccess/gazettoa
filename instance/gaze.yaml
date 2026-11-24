@@ -6,6 +6,8 @@ title: Gazettoa
 description: The official instance of Gazettoa, the read-only browser for TOA libraries. It reads two demo libraries for now, pll and risca.
 # site_url: the address the site is published at. Left out, it is taken from GitHub Actions
 # (https://<owner>.github.io/<repository>/), so a fork needs no change.
+# toa_site: the site of TOA, linked from the home page as "About TOA"; left out, no link
+toa_site: https://true-openaccess.github.io/toa/
 # viewer_url: https://rich-netlist.github.io/rnl/viewer/
 # hosts: how files are reached on a host that is not github.com, gitlab.com or codeberg.org
 #   git.example.org:

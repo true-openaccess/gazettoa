@@ -495,6 +495,7 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
         "description": cfg.description,
         "site_url": cfg.site_url,
         "viewer_url": cfg.viewer_url,
+        "toa_site": cfg.toa_site,
         "repository": cfg.repository,
         "built": built,
         "feeds": feeds_ok,
