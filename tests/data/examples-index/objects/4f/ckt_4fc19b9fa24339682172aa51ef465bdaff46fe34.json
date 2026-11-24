@@ -76,7 +76,7 @@
     {
       "library": "lee",
       "path": "ckt/dyn-latch-cmp/lee-sky130.g2/ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34",
-      "first_commit": "09d658fc6bab00d35724ab0facf60a6162ebf538",
+      "first_commit": "c3053a3bfd0d5bec8d53215c841d7c3102255c8b",
       "first_date": "2026-11-08T14:00:00Z",
       "first_signature": null,
       "notes": [],
@@ -88,7 +88,7 @@
   ],
   "first": {
     "library": "lee",
-    "commit": "09d658fc6bab00d35724ab0facf60a6162ebf538",
+    "commit": "c3053a3bfd0d5bec8d53215c841d7c3102255c8b",
     "date": "2026-11-08T14:00:00Z",
     "signature": null
   },

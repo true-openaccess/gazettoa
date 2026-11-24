@@ -53,7 +53,8 @@ DEMO_STAMPED = Path("ckt/inv/cmos.g1")
 # the lines of the library list marked latest, by label: one generation of each series of circuits,
 # testbenches and frozen libraries but cmos-copy;
 # cmos.g1 is left for cmos.g2, so its page shows a newer version
-DEMO_LATEST = {"inv/cmos.g2", "inv/cmos-x2.g1", "inv/cmos-lp.g1", "buf2/two-inv.g1", "inv/tb_inv_char.g1", "gaze-demo.g1"}
+DEMO_LATEST = {"inv/cmos.g2", "inv/cmos-x2.g1", "inv/cmos-lp.g1", "buf2/two-inv.g1", "inv/tb_inv_char.g1", "buf2/tb_buf2_delay.g1",
+               "gaze-demo.g1", "inv-char-plan.g1"}
 
 
 def draft_places(root: Path) -> dict[str, Path]:

@@ -68,6 +68,7 @@ class INDEX:
 class IFC:
     NAME = "name"
     PINS = "pins"
+    PROBES = "probes"           # nodes inside the module that testbenches may observe (B36)
     SYMBOL_FILE = "symbol.rnl"
 
 
@@ -76,6 +77,12 @@ class PIN:
     KIND = "kind"
     DIRECTION = "direction"
     WIDTH = "width"
+    DESCRIPTION = "description"
+
+
+class PROBE:
+    """A probe of an interface (B36): a node inside the module, by a name of the form of a pin name."""
+    NAME = "name"
     DESCRIPTION = "description"
 
 
@@ -103,6 +110,15 @@ class CKT:
 class SPEC:
     """Keys of `specifications` that Gazettoa reads; the others are shown as they are."""
     PROCESS = "process"
+    TARGETS = "targets"         # full metric name -> a target or a list of targets (B36)
+
+
+class TARGET:
+    """A target of a circuit: at least one of `min` and `max`; `preset`, the preset of the testbench
+    under which it holds, or under every one when left out."""
+    MIN = "min"
+    MAX = "max"
+    PRESET = "preset"
 
 
 class USE:
@@ -127,6 +143,8 @@ class ORIGIN:
 class TB:
     IFC = "ifc"
     NAME = "name"
+    SOCKET = "socket"           # the subcircuit its netlist uses for the block measured (B36)
+    PROBES = "probes"           # the probes of the interface its netlist names (B36)
     FILES = "files"
     EXTERNAL = "external"
     RUN = "run"
@@ -134,7 +152,15 @@ class TB:
     METRICS = "metrics"
     SIMULATORS = "simulators"
     PARAMETERS = "parameters"
-    PRESETS = "presets"
+    PRESETS = "presets"         # name -> one set of conditions, or a list of sets (B36)
+
+
+class ANALYZE:
+    """`analyze` of a testbench."""
+    ENTRY = "entry"
+    PYTHON = "python"
+    REQUIREMENTS = "requirements"
+    RESULTS = "results"         # the format of the results the script reads: psfascii, nutascii (B36)
 
 
 class METRIC:
@@ -154,14 +180,41 @@ def metric_full_name(tb_name: str, metric_id: str) -> str:
 
 class EVD:
     KIND = "kind"
-    SIM = "sim"                 # the one kind of 0.1: a simulation
+    SIM = "sim"                 # a simulation
+    MC = "mc"                   # a Monte Carlo simulation: statistics over samples (B37)
+    KINDS = (SIM, MC)           # the kinds of 0.1
     DUT = "dut"
     TBS = "tbs"
     CONDITIONS = "conditions"
+    PROBES = "probes"           # probe name -> the net of the circuit tested, in this run (B36)
     ENVIRONMENT = "environment"
     METRICS = "metrics"
     EVIDENCE = "evidence"
     LOCK_FILE = "lock.json"
+    SAMPLES_FILE = "evidence/samples.csv"   # of a record of the kind mc: one line per sample (B37)
+
+
+class STAT:
+    """`statistics`, the fourth slot of the conditions of a Monte Carlo simulation (B37)."""
+    METHOD = "method"           # mismatch, process, both
+    POINTS = "points"           # the number of samples
+    SAMPLING = "sampling"       # random, lds, lhs
+    SEED = "seed"
+    FIRST = "first"             # the number of the first sample; 1 when not written
+    RUN = "run"                 # each, batch
+    # what may differ between two records compared (B37): which samples, and how they were run
+    OF_THE_RUN = (FIRST, POINTS, RUN)
+
+
+class MCSTAT:
+    """The statistics of one metric of a record of the kind mc (B37)."""
+    N = "n"
+    FAILED = "failed"
+    MEAN = "mean"
+    SIGMA = "sigma"
+    MIN = "min"
+    MAX = "max"
+    ALL = (N, FAILED, MEAN, SIGMA, MIN, MAX)
 
 
 class LOCK:
@@ -177,12 +230,15 @@ class COND:
     OPTIONS = "options"
     MODELS = "models"
     SLOTS = (PARAMETERS, OPTIONS, MODELS)
+    STATISTICS = "statistics"   # the fourth slot, of a Monte Carlo simulation only (B37)
     MODEL_FILE = "file"         # the file name of an item of `models`
     MODEL_SECTION = "section"
 
 
 class ENV:
     SIMULATOR = "simulator"
+    NAME = "name"               # of `simulator`
+    VERSION = "version"         # of `simulator`
     COMMAND = "command"         # of `simulator`: the whole command line
 
 

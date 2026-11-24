@@ -117,6 +117,30 @@ export function fmtDate(s) {
   return str.slice(0, 10);
 }
 export const fmtCommit = c => (c ? String(c).slice(0, 10) : "—");
+/** A time to the minute, in UTC like every date of the site: "2026-11-25 16:37 UTC". */
+export function fmtTime(s) {
+  const d = new Date(String(s || ""));
+  if (!s || Number.isNaN(d.getTime())) return "—";
+  return d.toISOString().slice(0, 16).replace("T", " ") + " UTC";
+}
+/** When the libraries were last scanned and when the content last changed (data/scan.json, which
+ *  gaze-pages.yml rewrites on every run, also one that builds nothing), as two spans; the reader's
+ *  own time is in the tooltip. Without the file, both are the time of the build. */
+export function scanTimes() {
+  const s = S.scan || {};
+  const built = S.site && S.site.built;
+  const scanned = s.scanned || built;
+  const changed = s.changed || built;
+  const one = (text, iso, help) => {
+    const d = new Date(String(iso || ""));
+    const local = Number.isNaN(d.getTime()) ? "" : ` (${d.toLocaleString()})`;
+    return `<span class="scan-time" title="${esc(help + local)}"><time datetime="${esc(iso || "")}">${esc(text)}</time></span>`;
+  };
+  return [
+    one(t("Last scanned {t}", { t: fmtTime(scanned) }), scanned, t("When a run last checked the libraries, whether or not anything had changed.")),
+    one(t("Content last changed {t}", { t: fmtTime(changed) }), changed, t("When the last build that found a change ran: in a library, in the code of this site or in its tools.")),
+  ];
+}
 
 export function fmtNum(v) {
   if (v && typeof v === "object" && "float" in v) return String(v.float);

@@ -104,7 +104,7 @@
     {
       "library": "alice",
       "path": "evd/strongarm-comp/20261110T1200Z-wrap-off/evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85",
-      "first_commit": "869d929f27975f289738e7b556e594c434cec0a0",
+      "first_commit": "c963eb6c3124d68766acba0e0b988a30111ca593",
       "first_date": "2026-11-10T12:00:00Z",
       "first_signature": null,
       "notes": [],
@@ -116,7 +116,7 @@
   ],
   "first": {
     "library": "alice",
-    "commit": "869d929f27975f289738e7b556e594c434cec0a0",
+    "commit": "c963eb6c3124d68766acba0e0b988a30111ca593",
     "date": "2026-11-10T12:00:00Z",
     "signature": null
   },

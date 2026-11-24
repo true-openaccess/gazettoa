@@ -1,0 +1,31 @@
+{
+  "toa": "lock/1",
+  "dut": "ckt_draft-buf2-inv",
+  "tbs": [
+    {
+      "object": "tb_draft-buf2-delay",
+      "files": {
+        "analyze.py": "b0689465cacd4730dcedb5dfe1d1983e00a0b4902142b054e9013e7202cce11c",
+        "tb.sp": "ac20824f4f687b9c042ed32fd552171a31085cb2e02b0e230c1f2dac5e91f117"
+      }
+    }
+  ],
+  "tree": [
+    {
+      "path": "",
+      "object": "ckt_draft-buf2-inv",
+      "ifc": "ifc_draft-buf2",
+      "files": {
+        "buf2.sp": "746110b56b4cc3e446f8ec3e287e409852ce98c65e550954dc3810453d07f925"
+      }
+    },
+    {
+      "path": "inv",
+      "object": "ckt_draft-inv-cmos",
+      "ifc": "ifc_draft-inv",
+      "files": {
+        "inv.sp": "875b252c4bf5a0820e29442032314020c5bab885f73f9b3c3da37ebd66a893c6"
+      }
+    }
+  ]
+}

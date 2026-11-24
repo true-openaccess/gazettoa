@@ -78,13 +78,13 @@
     {
       "library": "official",
       "path": "ifc/strongarm-comp/ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
-      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_commit": "8684f6b69b8cf71af3b3ee3c9f8ba6b62b83e8d3",
       "first_date": "2026-11-01T09:00:00+08:00",
       "first_signature": null,
       "notes": [
         {
           "file": "20261103-clock.md",
-          "commit": "d83fc204f4a911e5b7cddcfe4996f9fd9cec5997",
+          "commit": "99ca8012949d351a00b92b5e14129360824e9980",
           "date": "2026-11-03T10:00:00+08:00",
           "size": 113,
           "text": "The outputs are reset high while `clk` is low, so a following stage should sample them only\nwhile `clk` is high.\n"
@@ -93,25 +93,25 @@
       "stamps": [],
       "source_list": "ifc/strongarm-comp/ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5.source.jsonl",
       "label": "strongarm-comp",
-      "latest": false
+      "latest": true
     },
     {
       "library": "official-chen",
       "path": "ifc/strongarm-comp/ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
-      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_commit": "8684f6b69b8cf71af3b3ee3c9f8ba6b62b83e8d3",
       "first_date": "2026-11-01T09:00:00+08:00",
       "first_signature": null,
       "notes": [
         {
           "file": "20261103-clock.md",
-          "commit": "d83fc204f4a911e5b7cddcfe4996f9fd9cec5997",
+          "commit": "99ca8012949d351a00b92b5e14129360824e9980",
           "date": "2026-11-03T10:00:00+08:00",
           "size": 113,
           "text": "The outputs are reset high while `clk` is low, so a following stage should sample them only\nwhile `clk` is high.\n"
         },
         {
           "file": "20261109-fork.md",
-          "commit": "729a41f321c65a196092eb9d3b447afa17f3c9ff",
+          "commit": "9a845a65769269f278a9bc72503aeae60754e4a5",
           "date": "2026-11-09T08:30:00+08:00",
           "size": 57,
           "text": "This fork adds sky130-lowkick.g1 and a note on kickback.\n"
@@ -120,12 +120,12 @@
       "stamps": [],
       "source_list": "ifc/strongarm-comp/ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5.source.jsonl",
       "label": "strongarm-comp",
-      "latest": false
+      "latest": true
     }
   ],
   "first": {
     "library": "official",
-    "commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+    "commit": "8684f6b69b8cf71af3b3ee3c9f8ba6b62b83e8d3",
     "date": "2026-11-01T09:00:00+08:00",
     "signature": null
   },
@@ -161,11 +161,15 @@
       "at": "lock.json:tree/0/ifc"
     },
     {
-      "name": "lib_cf125e93948ecdee725718e666cf7aa1be126799",
+      "name": "lib_1b995a48386069233dc1676aa6eaadb03a8dec89",
       "at": "members.source.jsonl:3/object"
     },
     {
       "name": "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "tb_efa196442069f2c1171fc3913d0f751a61ce1bd4",
       "at": "toa.yaml:ifc"
     }
   ],

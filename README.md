@@ -39,7 +39,7 @@ The home page of this instance, and the symbols of its interfaces:
 ![The symbols of the interfaces](docs/screenshots/symbols.png)
 
 An interface of the demo library (`scripts/demo/`): its symbol and pins, and one table of its
-circuits with what their evidence records measured:
+circuits with what their evidence records measured, each value beside the circuit's own target:
 
 ![An interface and its implementations](docs/screenshots/interface.png)
 
@@ -55,8 +55,8 @@ A circuit, its schematic drawn by the RNL viewer from the netlist:
 | `builder/gaze/` | The builder, Python 3.10 or later, standard library only |
 | `web/` | The page shell: `index.html` and plain ES modules, no build step; `fonts/`, the fonts the site ships, with their licences |
 | `i18n/` | The languages of the interface; catalogs keyed by the English text |
-| `tests/` | Tests of the builder and of the text given to the RNL viewer; `tests/data/` holds an index `toa` wrote for its small examples |
-| `scripts/` | `examples.py`, a preview from toa's examples and a demo library; `serve.py`, the server for a preview; `i18n_keys.py`, the state of each catalog; `fonts.py`, how `web/fonts/` was made; `install-tool.sh`, how the workflows install `rnl`; `demo/`, the drafts of the demo library |
+| `tests/` | Tests of the builder, of the text given to the RNL viewer and of the page of a Monte Carlo simulation; `tests/data/` holds an index `toa` wrote for its small examples |
+| `scripts/` | `examples.py`, a preview from toa's examples and a demo library; `serve.py`, the server for a preview; `scan.py`, whether a run has anything to build, and the scan time; `i18n_keys.py`, the state of each catalog; `fonts.py`, how `web/fonts/` was made; `install-tool.sh`, how the workflows install `rnl`; `demo/`, the drafts of the demo library |
 | `.github/workflows/` | `gaze-ci.yml`, the tests; `gaze-pages.yml`, the site of this instance on GitHub Pages |
 
 ## Build a site
@@ -97,12 +97,12 @@ python scripts/serve.py --local-files ../toa/examples --local-files .work/exampl
 
 The examples of toa have no symbols and no RNL drawings; `scripts/demo/` holds the drafts of a
 small library that has both (two interfaces with `symbol.rnl`, circuits with drawings, two
-generations of one of them, and a frozen library), which `examples.py` seals and publishes with
-`toa` into a repository of its own.
+generations of one of them, a frozen library and a test plan), which `examples.py` seals and
+publishes with `toa` into a repository of its own.
 
 Tests: `python -m unittest discover -s tests` (from the root of this repository); with `node` on
-PATH it also runs `tests/viewer_text.test.mjs`, and with `rnl` on PATH it draws a symbol. None
-needs `toa`.
+PATH it also runs `tests/viewer_text.test.mjs` and `tests/mc.test.mjs`, and with `rnl` on PATH it
+draws a symbol. None needs `toa`.
 
 ## Run your own instance
 
@@ -141,8 +141,8 @@ spaces, `key: value`, one-line `{a: b}` mappings and `#` comments. Its keys:
 
 ## Publish with GitHub Pages
 
-`gaze-pages.yml` builds the site every 30 minutes, by hand, and when the instance or the site's
-code changes, and publishes it with GitHub Pages. It needs no secret, names no organisation, and
+`gaze-pages.yml` runs twice an hour, by hand, and when the instance or the site's code changes,
+and publishes the site with GitHub Pages. It needs no secret, names no organisation, and
 the site's address comes from GitHub Pages, so a fork runs it unchanged.
 
 - **toa** has no release yet, so the workflow builds it from its source: the repository in
@@ -152,6 +152,19 @@ the site's address comes from GitHub Pages, so a fork runs it unchanged.
   build stops at that step.
 - **rnl** is installed from a release of the RNL core, pinned by its SHA-256 (`RNL_URL`,
   `RNL_SHA256`).
+- **A run with nothing new builds nothing, but still says it looked.** `scripts/scan.py check`
+  reads the head of the branch of every library in the workspace list (`git ls-remote`, which
+  fetches nothing) and makes one stamp of them, this repository's commit and the tools. When it is
+  the stamp of the last site, no library is read and no page is built: the last site, from the
+  cache, is published again with a new scan time, and no cache entry is added. Otherwise the site
+  is built in full: when anything moved (a push always moves this repository's commit), when a
+  head could not be read or the last build could not fetch some library, so that the problem
+  shows, and on a run by hand.
+- **Two times on every page:** "last scanned", the latest run that checked the libraries, and
+  "content last changed", the last full build that found a change; in UTC, in the footer, above
+  the list of libraries and on the About page. They are in `data/scan.json`, the only file a run
+  that builds nothing changes, and the page asks for it fresh. GitHub Pages lets a copy live 10
+  minutes, so a time can be that late.
 - Each run keeps the index, the site and toa's cache in the Actions cache, so only what changed is
   read again. When the cache is gone, the records the site keeps from build to build (when it
   first saw each object, objects that left a library, what Software Heritage archived, what GitHub
@@ -162,7 +175,7 @@ the site's address comes from GitHub Pages, so a fork runs it unchanged.
 | Path | What |
 |---|---|
 | `index.html`, `assets/`, `i18n/` | The page shell |
-| `data/` | `site.json`, `search.json`, `changes.json`, one file per object (`obj/`), interface (`ifc/`) and library (`lib/`) |
+| `data/` | `site.json`, `scan.json` (the two times), `search.json`, `changes.json`, one file per object (`obj/`), interface (`ifc/`) and library (`lib/`) |
 | `sym/<hh>/<name>.svg` | The symbol of each interface: from its `symbol.rnl`, drawn by `rnl`, or a box from its pins |
 | `feeds/` | Atom: `all.xml`, `ifcs.xml`, `ifc/<name>.xml`, `lib/<key>.xml` (only with a site address) |
 | `llms.txt` | For agents: what the site is, where its data is, how to fetch objects with `toa` |
@@ -174,7 +187,14 @@ the site's address comes from GitHub Pages, so a fork runs it unchanged.
 A preview. The site is built from the index of `toa` and shows libraries, interfaces with their
 symbols and a table of their circuits, objects of the six types (`ifc`, `ckt`, `tb`, `evd`, `doc`,
 `lib`), latest marks, files checked against the index, schematics, lineage, reproduction groups,
-removals, search, feeds, `llms.txt`, English and Chinese. It reads format 2 of the index of `toa`,
+removals, search, feeds, `llms.txt`, English and Chinese. It shows what TOA added to testbenches
+for running them alike everywhere: the block measured (`socket`), the probes of interfaces and
+the net each record gave them, the format of the results, presets listed flat, and the targets of
+circuits beside the values measured and on the scatter plot. Of a Monte Carlo simulation (records
+of the kind `mc`) it shows the statistics of each metric, draws the samples of `samples.csv`
+against the circuit's targets, and compares the runs of one simulation sample by sample or by
+their statistics; a frozen library of an interface and its testbenches is shown as a test plan.
+It reads format 2 of the index of `toa`,
 and shows the evidence of authorship and time that the index gives: when this site first saw an
 object, objects with the same files, signed commits, timestamp proofs and Software Heritage (TOA
 4.3, 6.3, 8.3 and chapter 11). Every page says that it is a preview.

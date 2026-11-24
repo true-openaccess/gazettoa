@@ -56,7 +56,7 @@
     {
       "library": "official",
       "path": "ckt/strongarm-comp/sky130-razavi.g1/ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
-      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_commit": "8684f6b69b8cf71af3b3ee3c9f8ba6b62b83e8d3",
       "first_date": "2026-11-01T09:00:00+08:00",
       "first_signature": null,
       "notes": [],
@@ -68,7 +68,7 @@
     {
       "library": "official-chen",
       "path": "ckt/strongarm-comp/sky130-razavi.g1/ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
-      "first_commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+      "first_commit": "8684f6b69b8cf71af3b3ee3c9f8ba6b62b83e8d3",
       "first_date": "2026-11-01T09:00:00+08:00",
       "first_signature": null,
       "notes": [],
@@ -80,7 +80,7 @@
   ],
   "first": {
     "library": "official",
-    "commit": "72469b5b5f4b021da097325c1952c2b76085770a",
+    "commit": "8684f6b69b8cf71af3b3ee3c9f8ba6b62b83e8d3",
     "date": "2026-11-01T09:00:00+08:00",
     "signature": null
   },
@@ -96,7 +96,7 @@
       "at": "toa.yaml:refs/1"
     },
     {
-      "name": "lib_cf125e93948ecdee725718e666cf7aa1be126799",
+      "name": "lib_1b995a48386069233dc1676aa6eaadb03a8dec89",
       "at": "members.source.jsonl:2/object"
     }
   ],

@@ -1,0 +1,3 @@
+{"toa": "source/1"}
+{"object": "ifc_draft-inv", "label": "inv", "license": "CC0-1.0", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}
+{"object": "tb_draft-inv-char", "label": "inv/tb_inv_char.g1", "license": "CC0-1.0", "sources": [{"git": "https://example.org/gaze-demo/gaze-demo.git"}]}

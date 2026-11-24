@@ -1,0 +1,6 @@
+type: lib
+license: CC0-1.0
+author: Gazettoa
+name: inv-char-plan
+title: Test plan of the inverter
+description: A test plan (type lib) - the interface inv and the testbench that characterises it, run alone or together.

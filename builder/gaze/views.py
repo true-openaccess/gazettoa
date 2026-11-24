@@ -14,8 +14,9 @@ from urllib.parse import quote
 
 from . import config as cfgmod
 from . import repro
-from .fields import (AUTHOR, BASE, CKT, COND, DESCRIPTION, DOC, ENV, EVD, HISTORY, IFC, INDEX, LIB, LICENSE, LOCK, METRIC,
-                     PIN, ROLE, SOURCE, SPEC, TAGS, TB, TITLE, USE, kind_of, metric_full_name)
+from . import targets as tgmod
+from .fields import (ANALYZE, AUTHOR, BASE, CKT, COND, DESCRIPTION, DOC, ENV, EVD, HISTORY, IFC, INDEX, LIB, LICENSE, LOCK,
+                     MCSTAT, METRIC, PIN, PROBE, ROLE, SOURCE, SPEC, STAT, TAGS, TB, TITLE, USE, kind_of, metric_full_name)
 
 SHORT = 12  # "the first 12 characters of the object name" (type specifications, readable names)
 MEMBERS_SHOWN = 2000  # lines of a frozen library's list of members put into its page
@@ -113,6 +114,32 @@ def prefix_of(name: str) -> str:
 
 # the field that holds the design's `name`, by kind: the types whose generations share a name (3.4)
 _NAME_FIELD = {"ifc": IFC.NAME, "ckt": CKT.NAME, "tb": TB.NAME, "lib": LIB.NAME}
+
+
+def probes_of(m: dict) -> list[dict]:
+    """The probes an interface declares (B36): `{name, description}` in the order written."""
+    return [{"name": str(x.get(PROBE.NAME)), "description": x.get(PROBE.DESCRIPTION)}
+            for x in m.get(IFC.PROBES) or [] if isinstance(x, dict) and x.get(PROBE.NAME) is not None]
+
+
+def preset_rows(presets) -> list[dict] | None:
+    """The presets of a testbench, one row per set of conditions (B36: a preset is one set or a list
+    of sets): `{name, index, count, parameters, options, models, statistics}`, `index` counting from 1
+    in a list; `statistics` only in a set of a Monte Carlo simulation (B37). A preset that is
+    neither is shown as written (`raw`)."""
+    if not isinstance(presets, dict):
+        return None
+    rows = []
+    for name, p in presets.items():
+        sets = [p] if isinstance(p, dict) else p if isinstance(p, list) else None
+        if sets is None or not all(isinstance(x, dict) for x in sets):
+            rows.append({"name": str(name), "raw": p})
+            continue
+        for i, x in enumerate(sets):
+            rows.append({"name": str(name), "index": i + 1 if isinstance(p, list) else None, "count": len(sets),
+                         **{k: x.get(k) for k in COND.SLOTS}, "statistics": x.get(COND.STATISTICS),
+                         "other": {k: y for k, y in x.items() if k not in COND.SLOTS and k != COND.STATISTICS} or None})
+    return rows
 
 
 class Model:
@@ -543,6 +570,110 @@ class Model:
         return {"read": True, "groups": [{"group": g, "members": ms} for g, ms in groups.items()],
                 "count": count, "shown": min(count, MEMBERS_SHOWN)}
 
+    def record_targets(self, m: dict) -> list[dict]:
+        """The targets of the circuit a record tested (B36) on the metrics of the record, that hold
+        under its conditions: a record of the kind mc is held against them by its samples (B37)."""
+        dut = m.get(EVD.DUT)
+        dm = self.manifest(dut) if isinstance(dut, str) else {}
+        mets = m.get(EVD.METRICS) if isinstance(m.get(EVD.METRICS), dict) else {}
+        conds = m.get(EVD.CONDITIONS) if isinstance(m.get(EVD.CONDITIONS), dict) else {}
+        # a preset of a Monte Carlo simulation holds for the records of its statistics; a preset of
+        # one simulation also for the samples drawn around its conditions
+        key = tgmod.cond_key(conds)
+        plain = tgmod.cond_key({k: x for k, x in conds.items() if k != COND.STATISTICS})
+        out = []
+        for tg in tgmod.targets_of(dm):
+            if tg["metric"] not in mets:
+                continue
+            if tg["preset"]:
+                keys = tgmod.preset_keys(self, dm.get(CKT.IFC), tg["metric"], tg["preset"])
+                if keys is None or (key not in keys and plain not in keys):
+                    continue
+            out.append(tg)
+        return out
+
+    def mc_run(self, name: str) -> dict:
+        """One record of the kind mc, as the page compares it with another (B37): which samples it
+        ran and how, its simulator, its statistics, and where its samples.csv is."""
+        o = self.index.get(name) or {}
+        m = o.get("manifest") or {}
+        conds = m.get(EVD.CONDITIONS) if isinstance(m.get(EVD.CONDITIONS), dict) else {}
+        st = conds.get(COND.STATISTICS) if isinstance(conds.get(COND.STATISTICS), dict) else {}
+        env = m.get(EVD.ENVIRONMENT) if isinstance(m.get(EVD.ENVIRONMENT), dict) else {}
+        sim = env.get(ENV.SIMULATOR) if isinstance(env.get(ENV.SIMULATOR), dict) else {}
+        f = next((f for f in o.get("files") or [] if f.get("path") == EVD.SAMPLES_FILE), None)
+        mets = m.get(EVD.METRICS) if isinstance(m.get(EVD.METRICS), dict) else {}
+        return {"name": name, "first": st.get(STAT.FIRST, 1), "points": st.get(STAT.POINTS), "run": st.get(STAT.RUN),
+                "sampling": st.get(STAT.SAMPLING),
+                "simulator": " ".join(str(sim[k]) for k in (ENV.NAME, ENV.VERSION) if sim.get(k) is not None) or None,
+                "raw": self.raw_prefix(o) if o.get("present") else None,
+                "samples": EVD.SAMPLES_FILE if f else None, "samples_sha256": (f or {}).get("sha256"),
+                "stats": {k: {s: x.get(s) for s in MCSTAT.ALL} for k, x in mets.items() if isinstance(x, dict)}}
+
+    def test_plan(self, members: dict) -> dict | None:
+        """A test plan (type lib): a frozen library whose members are an interface and the testbenches
+        that measure it, with circuits when needed; it holds testbenches, and nothing but interfaces,
+        testbenches and circuits. Its interfaces (those it holds, and those its testbenches
+        measure), its testbenches with their metrics and presets, and its circuits. None for any
+        other frozen library, such as one that freezes a whole library."""
+        objs = [x["object"] for g in members.get("groups") or [] for x in g["members"]]
+        tbs = [x for x in objs if prefix_of(x) == "tb"]
+        if not tbs or any(prefix_of(x) not in ("ifc", "tb", "ckt") for x in objs):
+            return None
+        ifcs = [x for x in objs if prefix_of(x) == "ifc"] + [self.ifc_of(x) for x in tbs]
+        rows = []
+        for x in tbs:
+            m = self.manifest(x)
+            presets = m.get(TB.PRESETS) if isinstance(m.get(TB.PRESETS), dict) else {}
+            rows.append({"tb": x, "known": self.index.get(x) is not None,
+                         "metrics": [metric_view(m.get(TB.NAME), md)["full"] for md in m.get(TB.METRICS) or [] if isinstance(md, dict)],
+                         "presets": [{"name": str(k), "sets": len(p) if isinstance(p, list) else 1,
+                                      "mc": any(isinstance(y, dict) and COND.STATISTICS in y for y in (p if isinstance(p, list) else [p]))}
+                                     for k, p in presets.items()]})
+        return {"ifcs": list(dict.fromkeys(x for x in ifcs if x)), "tbs": rows,
+                "ckts": [x for x in objs if prefix_of(x) == "ckt"]}
+
+    def ifc_generations(self, name: str) -> list[dict]:
+        """The other generations of an interface along `base`, earlier and later, with how many
+        circuits and testbenches refer to each: each refers to one generation, so the page of one
+        says where the others are."""
+        seen, out = {name}, []
+        todo = [(x, "earlier") for x in base_of(self.index.get(name) or {})[:1]]
+        todo += [(x, "later") for x in (self.index.get(name) or {}).get(INDEX.BASE_BY) or []]
+        while todo:
+            x, way = todo.pop(0)
+            o = self.index.get(x)
+            if x in seen or not o or not o.get("present") or prefix_of(x) != "ifc":
+                continue
+            seen.add(x)
+            mb = self.members(x)
+            out.append({"ifc": x, "way": way, "generation": generation(o), "ckts": len(mb["ckt"]), "tbs": len(mb["tb"])})
+            todo += [(y, way) for y in (base_of(o)[:1] if way == "earlier" else o.get(INDEX.BASE_BY) or [])]
+        out.sort(key=lambda e: (e["generation"] or 0, e["ifc"]))
+        return out
+
+    def targets_view(self, m: dict, groups: list[dict]) -> list[dict]:
+        """The targets of a circuit (B36), each with the values its reproduction groups hold under the
+        sets of conditions it holds under, and whether each meets it."""
+        out = []
+        for tg in tgmod.targets_of(m):
+            keys = tgmod.preset_keys(self, m.get(CKT.IFC), tg["metric"], tg["preset"]) if tg["preset"] else None
+            # a preset that no testbench of the interface has: the target is shown, never judged
+            tg["preset_known"] = tg["preset"] is None or keys is not None
+            results = []
+            for g in groups if tg["preset_known"] else []:
+                if g.get("kind") == EVD.MC:
+                    continue  # its samples are held against the target on the record's page
+                if keys is not None and tgmod.cond_key(g.get("conditions")) not in keys:
+                    continue
+                row = next((r for r in g.get("metrics") or [] if r["metric"] == tg["metric"] and r.get("n")), None)
+                if row is not None:
+                    results.append({"group": g["id"], "cond_text": g.get("cond_text") or "", "value": row["median"],
+                                    "n": row["n"], "meets": tgmod.meets(tg, row["median"])})
+            tg["results"] = results
+            out.append(tg)
+        return out
+
     def view(self, name: str, groups_by_record: dict[str, dict], groups_by_dut: dict[str, list]) -> dict:
         """Everything the page of one object shows."""
         o = self.index.get(name) or {"name": name, "prefix": prefix_of(name), "present": False}
@@ -613,12 +744,13 @@ class Model:
             v["pins"] = [{k: pin.get(f) for k, f in (("name", PIN.NAME), ("kind", PIN.KIND), ("direction", PIN.DIRECTION),
                                                      ("width", PIN.WIDTH), ("description", PIN.DESCRIPTION))}
                          for pin in m.get(IFC.PINS) or [] if isinstance(pin, dict)]
+            v["probes"] = probes_of(m)
             v["has_symbol"] = any(f["path"] == IFC.SYMBOL_FILE for f in v["files"])
         elif p == "ckt":
             sp = m.get(CKT.SPECIFICATIONS)
             v.update(design=m.get(CKT.NAME), form=m.get(CKT.FORM), process=process_of(m),
                      parameters=m.get(CKT.PARAMETERS),
-                     specifications={k: x for k, x in sp.items() if k != SPEC.PROCESS} if isinstance(sp, dict) else None,
+                     specifications={k: x for k, x in sp.items() if k not in (SPEC.PROCESS, SPEC.TARGETS)} if isinstance(sp, dict) else None,
                      origin=m.get(CKT.ORIGIN), external=m.get(CKT.EXTERNAL),
                      netlist=((m.get(CKT.FILES) or {}).get(ROLE.NETLIST) or []))
             uses = []
@@ -635,11 +767,20 @@ class Model:
             for g in v["groups"]:
                 linked.update(g["records"])
                 linked.update(g["tbs"])
+            v["targets"] = self.targets_view(m, v["groups"])
         elif p == "tb":
             metrics = [metric_view(m.get(TB.NAME), md) for md in m.get(TB.METRICS) or [] if isinstance(md, dict)]
             sims = [s for s in m.get(TB.SIMULATORS) or [] if isinstance(s, dict)]
+            an = m.get(TB.ANALYZE)
+            an = an if isinstance(an, dict) else {}
+            # the probes it names, with what the interface says of each (B36)
+            known = {p["name"].lower(): p for p in probes_of(self.manifest(m.get(TB.IFC)))}
+            probes = [{"name": str(x), "description": (known.get(str(x).lower()) or {}).get("description"),
+                       "known": str(x).lower() in known} for x in m.get(TB.PROBES) or [] if isinstance(x, (str, int, float))]
             v.update(design=m.get(TB.NAME), metrics=metrics, simulators=sims, run=m.get(TB.RUN),
-                     analyze=m.get(TB.ANALYZE), parameters=m.get(TB.PARAMETERS), presets=m.get(TB.PRESETS),
+                     analyze={k: x for k, x in an.items() if k != ANALYZE.RESULTS} or None, results=an.get(ANALYZE.RESULTS),
+                     socket=m.get(TB.SOCKET), probes=probes,
+                     parameters=m.get(TB.PARAMETERS), presets=preset_rows(m.get(TB.PRESETS)),
                      external=m.get(TB.EXTERNAL), netlist=((m.get(TB.FILES) or {}).get(ROLE.NETLIST) or []))
             v["drawing"] = self.drawing(o, m, p)
             evds = []
@@ -652,7 +793,7 @@ class Model:
             kind = m.get(EVD.KIND)
             v["kind"] = kind if isinstance(kind, str) else None
             # a kind Gazettoa does not know is shown as it is, by the common rules only (type evd)
-            v["known_kind"] = kind == EVD.SIM
+            v["known_kind"] = kind in EVD.KINDS
             tree: dict[int, dict] = {}
             for r in o.get("references") or []:
                 mt = _LOCK_TREE.match(r.get("at", ""))
@@ -662,8 +803,14 @@ class Model:
             env = env if isinstance(env, dict) else {}
             conds = m.get(EVD.CONDITIONS)
             conds = conds if isinstance(conds, dict) else {}
+            # the net of the circuit tested that each probe was, in this run (B36), with what the
+            # interface of the circuit says of the probe
+            pr = m.get(EVD.PROBES)
+            known = {p["name"].lower(): p for p in probes_of(self.manifest(self.ifc_of(m.get(EVD.DUT))))}
+            v["probes"] = [{"name": str(k), "net": x, "description": (known.get(str(k).lower()) or {}).get("description")}
+                           for k, x in pr.items()] if isinstance(pr, dict) else None
             v.update(dut=m.get(EVD.DUT), tbs=m.get(EVD.TBS) or [],
-                     # the three slots in their order, then anything else written there
+                     # the three slots in their order, then anything else written there (statistics, B37)
                      conditions=[[k, conds.get(k)] for k in COND.SLOTS] + [[k, x] for k, x in conds.items() if k not in COND.SLOTS],
                      environment=env, simulator=env.get(ENV.SIMULATOR) if isinstance(env.get(ENV.SIMULATOR), dict) else None,
                      metrics=m.get(EVD.METRICS) if isinstance(m.get(EVD.METRICS), dict) else {},
@@ -678,6 +825,13 @@ class Model:
                         mv = metric_view(tm.get(TB.NAME), md)
                         v["metric_defs"][mv["full"]] = {k: mv[k] for k in ("unit", "better", "tolerance")}
             linked.update(x for x in [v["dut"], *v["tbs"]] if isinstance(x, str))
+            if kind == EVD.MC:
+                # a Monte Carlo simulation (B37): what the page needs to draw its samples, hold them
+                # against the targets of the circuit, and compare it with the others of its group
+                st = conds.get(COND.STATISTICS)
+                v["statistics"] = st if isinstance(st, dict) else None
+                v["targets"] = self.record_targets(m)
+                v["runs"] = [self.mc_run(r) for r in (v["group"] or {}).get("records") or [name]]
             v["counts_for"] = repro.record_library(self.index, o) if o.get("present") else None
             if v["group"]:
                 linked.update(v["group"]["records"])

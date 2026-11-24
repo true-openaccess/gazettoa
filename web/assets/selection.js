@@ -1,10 +1,11 @@
 // The table of the circuits of an interface (the tab "Implementations"), with its scatter plot.
 //
 // The builder says what the table holds (builder/gaze/selection.py): the columns, each with its
-// kind (text, number, date, latest, libraries, metric), one row per circuit, and the metrics of
-// each circuit per set of conditions. This file only draws what it is given, so it names no field
-// of a manifest. What the reader chooses (conditions, columns, filters, sort, earlier
-// generations, plot) is kept per interface while the page is open.
+// kind (text, number, date, latest, libraries, metric), one row per circuit, the metrics of each
+// circuit per set of conditions, and its targets with the sets of conditions each holds under.
+// This file only draws what it is given, so it names no field of a manifest. What the reader
+// chooses (conditions, columns, filters, sort, earlier generations, plot) is kept per interface
+// while the page is open.
 import { t, esc, fmtNum, fmtDate, st, nameLink, libLinks, latestMark } from "./core.js";
 
 const STATE = new Map();
@@ -37,6 +38,25 @@ const marksOf = (s, r, c) => ((r.conds[s.cond] || {}).marks || {})[c.key] || {};
 const label = c => (c.kind === "metric" ? c.label : t(c.label));
 const plain = c => (c.kind === "metric" ? `${c.group ? c.group + "." : ""}${c.label}${c.unit ? ` (${c.unit})` : ""}` : t(c.label));
 const display = (r, names) => (names[r.ckt] ? names[r.ckt][0] : r.ckt);
+
+/** The targets of a row on a metric that hold under the conditions chosen (conds null: under every set). */
+const targetsOf = (s, r, c) => ((r.targets || {})[c.key] || []).filter(x => x.conds === null || x.conds === undefined || x.conds.includes(s.cond));
+const meets = (x, v) => (x.min === null || x.min === undefined || v >= x.min) && (x.max === null || x.max === undefined || v <= x.max);
+function boundText(x) {
+  const lo = x.min !== null && x.min !== undefined, hi = x.max !== null && x.max !== undefined;
+  return lo && hi ? `${fmtNum(x.min)} – ${fmtNum(x.max)}` : lo ? `≥ ${fmtNum(x.min)}` : `≤ ${fmtNum(x.max)}`;
+}
+
+/** The targets beside a value: met, missed, or with no value to judge. */
+function targetsHtml(tg, v) {
+  if (!tg.length) return "";
+  const has = typeof v === "number" && Number.isFinite(v);
+  const ok = has && tg.every(x => meets(x, v));
+  const cls = !has ? "" : ok ? " ok" : " miss";
+  const what = !has ? t("Target of this circuit") : ok ? t("Meets the target of this circuit") : t("Misses the target of this circuit");
+  const tip = `${what}: ${tg.map(x => boundText(x) + (x.preset ? ` (${t("preset {p}", { p: x.preset })})` : "")).join(", ")}`;
+  return `<span class="sel-tgt${cls}" title="${esc(tip)}">${!has ? esc(t("target")) + " " : ""}${esc(tg.map(boundText).join(", "))}</span>`;
+}
 
 /* ------------------------------------------------------------------ filtering and sorting */
 
@@ -130,7 +150,10 @@ function cellHtml(s, c, r) {
     if (!empty(v)) return { html: latestMark(v) };
     return r.head && r.unmarked ? { html: `<span class="faint" title="${esc(t("No library of this instance marks a generation of this series latest; the newest is shown"))}">${esc(t("no mark"))}</span>` } : { html: `<span class="faint">—</span>` };
   }
-  if (empty(v)) return { html: `<span class="faint">—</span>`, cls: numeric(c) ? "r" : "" };
+  if (empty(v)) {
+    const tg = c.kind === "metric" ? targetsOf(s, r, c) : [];
+    return { html: tg.length ? targetsHtml(tg, null) : `<span class="faint">—</span>`, cls: numeric(c) ? "r" : "" };
+  }
   if (c.kind === "libraries") return { html: libLinks(v) };
   if (c.kind === "date") return { html: esc(fmtDate(v)), cls: "nw" };
   if (c.kind === "text") return { html: esc(v) };
@@ -141,7 +164,8 @@ function cellHtml(s, c, r) {
     m.multi ? st("multi", t("multi-party"), t("Multi-party verified")) : "",
     m.disagree ? st("disputed", t("disagree"), t("Two values differ by more than the tolerance")) : "",
   ].filter(Boolean).join(" ");
-  return { html: `<span class="num">${esc(fmtNum(v))}</span>${tags ? ` <span class="sel-tags">${tags}</span>` : ""}`, cls: "r nw" };
+  const tg = targetsHtml(targetsOf(s, r, c), v);
+  return { html: `<span class="num">${esc(fmtNum(v))}</span>${tags ? ` <span class="sel-tags">${tags}</span>` : ""}${tg ? `<br>${tg}` : ""}`, cls: "r nw" };
 }
 
 function nameCell(s, r, names) {
@@ -243,13 +267,32 @@ function plotHtml(s, sel, rows, names) {
   const pts = rows.map(r => ({ r, x: num(valueOf(s, r, cx)), y: num(valueOf(s, r, cy)) })).filter(p => p.x !== null && p.y !== null);
   const logX = s.logX && pts.every(p => p.x > 0), logY = s.logY && pts.every(p => p.y > 0);
   if (!pts.length) return `<div class="sel-plot">${controls}<p class="empty">${esc(t("No row has both values."))}</p></div>`;
+  // the targets of the circuits plotted on each axis (B36), each bound once, with the circuits that
+  // have it; a dot that misses a target of its own circuit is ringed
+  const bounds = (c, log) => {
+    const out = new Map();
+    if (c.kind !== "metric") return [];
+    for (const p of pts) {
+      for (const x of targetsOf(s, p.r, c)) {
+        for (const [side, b] of [["min", x.min], ["max", x.max]]) {
+          if (b === null || b === undefined || (log && b <= 0)) continue;
+          const k = `${side}:${b}`;
+          if (!out.has(k)) out.set(k, { side, v: b, rows: [] });
+          out.get(k).rows.push(display(p.r, names));
+        }
+      }
+    }
+    return [...out.values()];
+  };
+  const tx = bounds(cx, logX), ty = cx.key === cy.key ? [] : bounds(cy, logY);
+  const misses = p => targetsOf(s, p.r, cx).some(x => !meets(x, p.x)) || targetsOf(s, p.r, cy).some(x => !meets(x, p.y));
   const W = 640, H = 380, L = 70, R = 16, T = 14, B = 48;
   const ext = (vs, log) => {
     let lo = Math.min(...vs), hi = Math.max(...vs);
     if (log) { lo /= 1.25; hi *= 1.25; } else { const pad = (hi - lo || Math.abs(hi) || 1) * 0.08; lo -= pad; hi += pad; }
     return [lo, hi];
   };
-  const [x0, x1] = ext(pts.map(p => p.x), logX), [y0, y1] = ext(pts.map(p => p.y), logY);
+  const [x0, x1] = ext([...pts.map(p => p.x), ...tx.map(b => b.v)], logX), [y0, y1] = ext([...pts.map(p => p.y), ...ty.map(b => b.v)], logY);
   const fx = v => L + (logX ? Math.log10(v / x0) / Math.log10(x1 / x0) : (v - x0) / (x1 - x0)) * (W - L - R);
   const fy = v => H - B - (logY ? Math.log10(v / y0) / Math.log10(y1 / y0) : (v - y0) / (y1 - y0)) * (H - T - B);
   const colour = p => (s.color ? String(p.r.values[s.color] ?? "—") : "");
@@ -264,17 +307,24 @@ function plotHtml(s, sel, rows, names) {
     const pf = pareto(pts, cx.better, cy.better);
     if (pf.length >= 2) front = `<polyline class="sc-front" points="${pf.map(p => `${fx(p.x)},${fy(p.y)}`).join(" ")}"/>`;
   }
+  const tgtTip = (c, b) => `${t("Target of {n}", { n: b.rows.join(", ") })}: ${plain(c)} ${b.side === "max" ? "≤" : "≥"} ${fmtNum(b.v)}`;
+  const tgts = [
+    ...tx.map(b => `<line class="sc-tgt" x1="${fx(b.v)}" x2="${fx(b.v)}" y1="${T}" y2="${H - B}"><title>${esc(tgtTip(cx, b))}</title></line><text class="sc-tgt-label" x="${fx(b.v) + 4}" y="${T + 10}">${b.side === "max" ? "≤" : "≥"} ${esc(fmtNum(b.v))}</text>`),
+    ...ty.map(b => `<line class="sc-tgt" x1="${L}" x2="${W - R}" y1="${fy(b.v)}" y2="${fy(b.v)}"><title>${esc(tgtTip(cy, b))}</title></line><text class="sc-tgt-label" x="${W - R - 4}" y="${fy(b.v) - 4}" text-anchor="end">${b.side === "max" ? "≤" : "≥"} ${esc(fmtNum(b.v))}</text>`),
+  ].join("");
   const dots = pts.map(p => {
-    const tip = `${display(p.r, names)}: ${plain(cx)} ${fmtNum(p.x)}, ${plain(cy)} ${fmtNum(p.y)}`;
-    return `<a href="#/${esc(p.r.ckt)}"><circle class="sc-dot sc-c${ci(p)}" cx="${fx(p.x)}" cy="${fy(p.y)}" r="6"><title>${esc(tip)}</title></circle></a>`;
+    const miss = misses(p);
+    const tip = `${display(p.r, names)}: ${plain(cx)} ${fmtNum(p.x)}, ${plain(cy)} ${fmtNum(p.y)}${miss ? ` (${t("misses a target of its own")})` : ""}`;
+    return `<a href="#/${esc(p.r.ckt)}">${miss ? `<circle class="sc-miss" cx="${fx(p.x)}" cy="${fy(p.y)}" r="9"/>` : ""}<circle class="sc-dot sc-c${ci(p)}" cx="${fx(p.x)}" cy="${fy(p.y)}" r="6"><title>${esc(tip)}</title></circle></a>`;
   }).join("");
   const svg = `<svg class="sc-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t("Scatter plot"))}: ${esc(plain(cx))}, ${esc(plain(cy))}">
     ${grid}<line class="sc-axis" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/><line class="sc-axis" x1="${L}" x2="${L}" y1="${T}" y2="${H - B}"/>
     <text class="sc-label" x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle">${esc(plain(cx))}${logX ? " (log)" : ""}</text>
     <text class="sc-label" transform="translate(16 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">${esc(plain(cy))}${logY ? " (log)" : ""}</text>
-    ${front}${dots}</svg>`;
+    ${tgts}${front}${dots}</svg>`;
   const legend = s.color ? `<div class="sc-legend">${cats.map((c, i) => `<span><i class="sc-c${i % PALETTE}"></i>${esc(c || "—")}</span>`).join("")}</div>` : "";
-  const note = front ? `<p class="faint">${esc(t("The line joins the rows no other row beats on both axes, each in the direction its metric is better."))}</p>` : "";
+  const note = (front ? `<p class="faint">${esc(t("The line joins the rows no other row beats on both axes, each in the direction its metric is better."))}</p>` : "")
+    + (tx.length || ty.length ? `<p class="faint">${esc(t("A dashed red line is a target of the circuits plotted, under the conditions chosen; each circuit has its own. A ringed dot misses a target of its own circuit."))}</p>` : "");
   return `<div class="sel-plot">${controls}${svg}${legend}${note}</div>`;
 }
 

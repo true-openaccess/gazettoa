@@ -4,15 +4,31 @@ author: Gazettoa
 ifc: ifc_draft-inv
 name: tb_inv_char
 title: Delay and power, driving a fan-out of four
+socket: inv
 files:
   netlist:
   - tb.sp
 simulators:
 - {name: ngspice, version: '42'}
-run: ngspice -b tb.sp -o meas.txt
-analyze: {entry: analyze.py, python: '>=3.10'}
+run: ngspice -b input.sp -r results/results.raw
+analyze: {entry: analyze.py, python: '>=3.10', results: nutascii}
 metrics:
 - {id: tpd, unit: ps, better: lower, tolerance: {rel: 0.05}, description: Delay from the input rising to the output falling}
 - {id: power, unit: uW, better: lower, tolerance: {rel: 0.05}, description: Average power from the supply}
 parameters:
   vdd: {unit: V, description: Supply voltage}
+presets:
+  nom:
+    parameters: {vdd: 1.8}
+    options: {temp: 27}
+    models:
+    - {file: demo.lib, section: tt}
+  supply:
+  - parameters: {vdd: 1.2}
+    options: {temp: 27}
+    models:
+    - {file: demo.lib, section: tt}
+  - parameters: {vdd: 1.98}
+    options: {temp: 27}
+    models:
+    - {file: demo.lib, section: tt}

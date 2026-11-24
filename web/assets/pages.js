@@ -1,10 +1,11 @@
 // Gazettoa: the pages. Each returns {title, html}; slots marked data-raw are filled afterwards
 // with files fetched from the object's library (or the site's copy).
 import {
-  S, t, esc, getJSON, objUrl, ifcUrl, libUrl, rawUrl, prefixOf, short, fmtDate, fmtCommit, fmtNum, yamlish,
+  S, t, esc, getJSON, objUrl, ifcUrl, libUrl, rawUrl, prefixOf, short, fmtDate, fmtCommit, fmtNum, fmtTime, scanTimes, yamlish,
   typeName, TYPE_PLURAL, TYPE_ORDER, nameLink, nameChip, linkChip, libLink, libLinks, st, tag, helpBtn, dash, validMark,
   panel, bodyDiv, emptyBody, table, kv, fold, pre, renderMd, register, feedLink, latestMark, LATEST_HELP,
 } from "./core.js";
+import { runText } from "./mc.js";
 
 /* ================================================================ shared pieces */
 
@@ -310,6 +311,10 @@ function removalsPanel(v) {
     { sub: esc(t("Removal records are the libraries' own (TOA 4.2); this site keeps no record of its own")) });
 }
 
+/** A metric of a record: one value, or for a Monte Carlo simulation (B37) its statistics. */
+const isStats = x => x !== null && typeof x === "object" && !Array.isArray(x) && "n" in x;
+const statsText = x => `${fmtNum(x.mean)} ± ${fmtNum(x.sigma)} (n ${fmtNum(x.n)})`;
+const valueText = x => (isStats(x) ? statsText(x) : fmtNum(x));
 const metricCell = (full, val, def) => `${esc(fmtNum(val))}${def && def.unit ? ` <span class="faint">${esc(def.unit)}</span>` : ""}`;
 const tolText = tol => (tol && typeof tol === "object" ? Object.entries(tol).map(([k, x]) => `${k} ${fmtNum(x)}`).join(", ") : t("no tolerance"));
 
@@ -323,17 +328,31 @@ function agreeMark(m) {
 const metricMulti = m => (m && m.multi_party ? st("multi", t("Multi-party verified"), t("{n} repositories", { n: m.sources })) : "");
 
 function groupResults(g) {
+  if (g.kind === "mc") {
+    // each record's statistics; whether they agree is judged on a record's page, from samples.csv
+    return `<div class="grp-metrics">${(g.metrics || []).map(m => `<span><span class="mono">${esc(m.metric)}</span> ${(m.stats || []).map(x => `<b class="num">${esc(fmtNum(x.mean))}</b> ± ${esc(fmtNum(x.sigma))}${m.unit ? ` <span class="faint">${esc(m.unit)}</span>` : ""} <span class="faint">(n ${esc(fmtNum(x.n))})</span>`).join("; ")} ${metricMulti(m)}</span>`).join("")}</div>`;
+  }
   return `<div class="grp-metrics">${(g.metrics || []).map(m =>
     `<span><span class="mono">${esc(m.metric)}</span> <b class="num">${esc(fmtNum(m.median))}</b>${m.unit ? ` <span class="faint">${esc(m.unit)}</span>` : ""}${m.n >= 2 ? ` <span class="faint">(${esc(t("{n} values", { n: m.n }))})</span>` : ""} ${metricMulti(m)} ${agreeMark(m)}</span>`).join("")}</div>`;
 }
 const MULTI_HELP = () => esc(t("Evidence records of a simulation of the same circuit, testbenches and conditions. Multi-party verified: a metric has values from at least two repositories, in records with different object names. Disagree: two values of a metric differ by more than its tolerance. The two are separate, and a metric can be both. A record counts for the library where it was first published, by the dates of its commits; a fork carrying it does not count again. This site sees only the libraries it collects: two records that reach it only through two different libraries count as two parties, even if both came from one place. Neither label is a problem."));
+/** A value of a set of conditions in a cell: `name=value` for a mapping, each model file on a line. */
+const scalarText = x => (Array.isArray(x) ? `[${x.map(scalarText).join(", ")}]` : x && typeof x === "object" ? yamlish(x).replace(/\n\s*/g, ", ") : String(x));
+const slotText = o => (o && typeof o === "object" && !Array.isArray(o) ? Object.entries(o).map(([k, x]) => `${k}=${scalarText(x)}`).join(" ") : scalarText(o));
+const modelsHtml = ms => (Array.isArray(ms) ? ms.map(m => (m && typeof m === "object" && !Array.isArray(m)
+  ? `<span class="mono">${esc(String(m.file ?? "?"))}</span>${m.section !== undefined ? ` <span class="faint">${esc(Array.isArray(m.section) ? m.section.join(", ") : String(m.section))}</span>` : ""}`
+  : `<span class="mono">${esc(scalarText(m))}</span>`)).join("<br>") : `<span class="mono">${esc(scalarText(ms))}</span>`);
+const probesText = pr => Object.entries(pr || {}).map(([k, x]) => `${k}→${scalarText(x)}`).join(" ");
+/** A target's bounds (B36): `≤ max`, `≥ min`, or `min – max`. */
+const boundText = x => (x.min !== null && x.max !== null ? `${fmtNum(x.min)} – ${fmtNum(x.max)}` : x.min !== null ? `≥ ${fmtNum(x.min)}` : `≤ ${fmtNum(x.max)}`);
+
 const multiMark = g => [g.multi_party ? st("multi", t("Multi-party verified")) : "", g.disagree ? st("disputed", t("disagree")) : ""].filter(Boolean).join(" ") || dash;
 
 function groupsTable(groups, names, { withDut = true } = {}) {
   const rows = groups.map(g => [
     ...(withDut ? [nameLink(g.dut, names)] : []),
     g.tbs.map(n => nameLink(n, names)).join("<br>"),
-    `<span class="mono">${esc(g.cond_text || t("default"))}</span>`,
+    (g.kind === "mc" ? tag(t("Monte Carlo")) + " " : "") + `<span class="mono">${esc(g.cond_text || t("default"))}</span>` + (g.probes ? `<br><span class="mono faint" title="${esc(t("The net of the circuit tested that each probe was"))}">${esc(probesText(g.probes))}</span>` : ""),
     { html: g.records.map(n => nameLink(n, names)).join("<br>") },
     { html: esc(String(g.sources.length)), cls: "r num" },
     groupResults(g),
@@ -375,7 +394,7 @@ function librariesPanel(libs) {
     libState(l),
   ]);
   return panel(esc(t("Libraries")), table([esc(t("Library")), esc(t("Address")), esc(t("Commit read")), { html: esc(t("Objects")), cls: "r" }, { html: esc(t("Removed")), cls: "r" }, esc(t("State"))], rows) || emptyBody(t("This instance includes no library yet.")),
-    { sub: esc(t("from the instance's workspace list")) });
+    { sub: `${esc(t("from the instance's workspace list"))} · ${scanTimes().join(" · ")}` });
 }
 
 function ifcRows(ifcs) {
@@ -464,6 +483,8 @@ export async function pageIfc(name, tab) {
   const anyWidth = (v.pins || []).some(p => p.width), anyDesc = (v.pins || []).some(p => p.description);
   const pins = (v.pins || []).map(p => [`<b>${esc(p.name)}</b>`, esc(p.kind || ""), esc(p.direction || ""), ...(anyWidth ? [{ html: p.width ? esc(String(p.width)) : dash, cls: "r num" }] : []), ...(anyDesc ? [esc(p.description || "")] : [])]);
   const pinHead = [esc(t("Pin")), esc(t("Kind")), esc(t("Direction")), ...(anyWidth ? [{ html: esc(t("Width")), cls: "r" }] : []), ...(anyDesc ? [esc(t("Description"))] : [])];
+  const probes = (v.probes || []).map(p => [`<b class="mono">${esc(p.name)}</b>`, esc(p.description || "")]);
+  const PROBES_HELP = esc(t("Nodes inside the module that testbenches may observe, part of what the interface promises: every circuit should have a net for each. A testbench names only the probe; which net of a circuit it is, each evidence record says."));
   const hero = `<section class="hero"><div class="hero-top"><div class="hero-main">
       ${crumb([`<a href="#/search?p=ifc">${esc(t("Interfaces"))}</a>`])}
       <div class="h1-row"><h1>${esc(v.display)}</h1>${tag(typeName("ifc"))}${validMark(v)}</div>
@@ -474,16 +495,24 @@ export async function pageIfc(name, tab) {
     </div>${v.symbol ? `<div class="hero-side">${symbolFigure(v.symbol, v.display)}</div>` : ""}</div>
     <details class="hero-more" open><summary>${esc(t("Pins"))} <span class="hint">${esc(t("{n} pins", { n: pins.length }))}</span></summary>
       ${table(pinHead, pins) || emptyBody(t("No pins."))}
-    </details></section>`;
+    </details>${probes.length ? `<details class="hero-more" open><summary>${esc(t("Probes"))} <span class="hint">${esc(t("{n} probes", { n: probes.length }))}</span></summary>
+      <div class="body"><p class="faint">${PROBES_HELP}</p></div>${table([esc(t("Probe")), esc(t("Description"))], probes)}
+    </details>` : ""}</section>`;
   const twinNote = twins.length ? `<div class="notice-info">${esc(t("{n} other interfaces in this instance have the same name.", { n: twins.length }))} <a href="#/ifc/${encodeURIComponent(v.display)}">${esc(t("See them all"))}</a></div>` : "";
   const tabs = `<nav class="tabs">${IFC_TABS.map(([k, label]) => `<a href="#/${esc(name)}/${k}" class="${k === tab ? "on" : ""}">${esc(t(label))}${k === "evidence" ? "" : `<span class="n">${counts[k]}</span>`}</a>`).join("")}</nav>`;
   const SERIES_HELP = esc(t("A series is the generations of one design: the same name, each made from the one before (base). Each series shows the generation a library of this instance marks latest, every library's mark shown; without a mark, the newest. The other generations are folded (TOA 3.4, 5.2)."));
+  // each circuit and testbench refers to one generation of the interface (base): say where the others are
+  const gens = sh.generations || [];
+  const genNote = gens.length ? `<div class="notice-info">${esc(t("Each circuit and testbench refers to one generation of an interface. Other generations of this one:"))}<ul class="plain">${gens.map(x => `<li>${nameLink(x.ifc, names, { withShort: true })} <span class="faint">${esc(x.way === "earlier" ? t("earlier, generation {g}", { g: x.generation ?? "?" }) : t("later, generation {g}", { g: x.generation ?? "?" }))}</span> · <a href="#/${esc(x.ifc)}/ckts">${esc(t("{n} circuits", { n: x.ckts }))}</a> · <a href="#/${esc(x.ifc)}/tbs">${esc(t("{n} testbenches", { n: x.tbs }))}</a></li>`).join("")}</ul></div>` : "";
+  const plans = (sh.plans || []).map(c => [nameLink(c.name, names, { withShort: true }) + (c.title ? `<span class="sub">${esc(c.title)}</span>` : ""), c.latest && c.latest.length ? latestMark(c.latest) : dash, libLinks(c.libraries)]);
+  const PLAN_HELP = esc(t("A frozen library whose members are an interface and the testbenches that measure it, with circuits when needed (type lib). Each testbench can still be run alone."));
   let body = "";
   if (tab === "ckts") {
-    body = selectionPanel(sh, names, name);
+    body = genNote + selectionPanel(sh, names, name);
   } else if (tab === "tbs") {
     const rows = seriesRows((sh.series || {}).tb || [], sh.tbs, names, (c, fold, s) => [nameLink(c.name, names, { withShort: true }) + (c.title ? `<span class="sub">${esc(c.title)}</span>` : "") + fold, (c.metrics || []).map(m => `<span class="mono">${esc(m)}</span>`).join("<br>"), latestCell(c, s), libLinks(c.libraries), c.valid ? "" : st("disputed", t("does not pass"))]);
-    body = panel(esc(t("Related testbenches")) + " " + helpBtn(SERIES_HELP), table([esc(t("Testbench")), esc(t("Metrics")), esc(t("Latest")), esc(t("Libraries")), ""], rows) || emptyBody(t("No testbench for this interface yet.")));
+    body = genNote + panel(esc(t("Related testbenches")) + " " + helpBtn(SERIES_HELP), table([esc(t("Testbench")), esc(t("Metrics")), esc(t("Latest")), esc(t("Libraries")), ""], rows) || emptyBody(t("No testbench for this interface yet.")))
+      + (plans.length ? panel(esc(t("Test plans")) + " " + helpBtn(PLAN_HELP), table([esc(t("Frozen library")), esc(t("Latest")), esc(t("Libraries"))], plans)) : "");
   } else if (tab === "evidence") {
     body = panel(esc(t("Reproduction groups")) + " " + helpBtn(MULTI_HELP()), groupsTable(sh.groups, names) || emptyBody(t("No simulation of a circuit of this interface yet.")),
       { sub: esc(t("simulations of one circuit, the same testbenches and the same conditions")) });
@@ -508,7 +537,7 @@ function selectionPanel(sh, names, ifc) {
   const sub = esc(t("{n} series, {m} circuits", { n: ((sh.series || {}).ckt || []).length, m: sh.ckts.length }));
   if (!sel || !sel.rows.length) return panel(esc(t("Implementations")), emptyBody(t("No circuit of this interface yet.")));
   const id = register({ kind: "sel", ifc, sel, names });
-  const help = esc(t("One row per circuit of this interface. Each series shows the generation a library of this instance marks latest, or without a mark the newest; the earlier generations are shown on request (TOA 3.4, 5.2). The columns after the fixed ones are the metrics of the testbenches: a value is the median of the evidence records of that circuit under the conditions chosen. Sort by a column, filter, choose the columns, or plot two columns against each other."));
+  const help = esc(t("One row per circuit of this interface. Each series shows the generation a library of this instance marks latest, or without a mark the newest; the earlier generations are shown on request (TOA 3.4, 5.2). The columns after the fixed ones are the metrics of the testbenches: a value is the median of the evidence records of that circuit under the conditions chosen. Below a value, a bound is a target of that circuit (its specifications), marked ✓ when the value meets it and ✗ when not; a target is no result. Sort by a column, filter, choose the columns, or plot two columns against each other."));
   return `<section class="panel sel-panel"><header><h2>${esc(t("Implementations"))}</h2>${helpBtn(help)}<span class="sub">${sub}</span></header><div class="body" data-sel="${id}"></div></section>`;
 }
 
@@ -578,13 +607,21 @@ function cktPage(v, names) {
   const usesPanel = uses.length ? panel(esc(t("Uses")), table([esc(t("Subcircuit")), esc(t("Interface")), esc(t("Circuit")), esc(t("Requirements"))], uses), { sub: esc(t("the expanded tree's first level")) }) : "";
   const more = [];
   const restSpecs = Object.fromEntries(Object.entries(sp).filter(([k]) => k !== "vdd" && k !== "temp"));
+  const tgRows = (v.targets || []).map(x => [
+    `<span class="mono">${esc(x.metric)}</span>`,
+    { html: `<span class="mono">${esc(boundText(x))}</span>`, cls: "nw" },
+    x.preset ? `<code>${esc(x.preset)}</code>${x.preset_known ? "" : " " + st("warn", t("no testbench has it"), t("No testbench of this interface with this name has this preset"))}` : `<span class="faint">${esc(t("every preset"))}</span>`,
+    (x.results || []).length ? x.results.map(r => `<span class="num ${r.meets ? "tgt-ok" : "tgt-miss"}">${r.meets ? "✓" : "✗"} ${esc(fmtNum(r.value))}</span>${r.n >= 2 ? ` <span class="faint">×${r.n}</span>` : ""} <span class="mono faint">${esc(r.cond_text || t("default"))}</span>`).join("<br>") : dash,
+  ]);
+  const TARGETS_HELP = esc(t("What the author of this circuit aims for, on metrics of the testbenches of its interface (specifications.targets). A target holds under the sets of conditions of its preset, or under every set. Targets are not results: the values are the medians of this circuit's reproduction groups under those conditions, ✓ when they meet the target."));
+  const targetsPanel = tgRows.length ? panel(esc(t("Targets")) + " " + helpBtn(TARGETS_HELP), table([esc(t("Metric")), esc(t("Target")), esc(t("Preset")), esc(t("Measured"))], tgRows)) : "";
   if (Object.keys(restSpecs).length) more.push(`<h3>${esc(t("Other specifications"))}</h3>${pre(yamlish(restSpecs))}`);
   if (v.parameters) more.push(`<h3>${esc(t("Parameters"))}</h3>${pre(yamlish(v.parameters))}`);
   if (v.external) more.push(`<h3>${esc(t("External files"))}</h3><p class="faint">${esc(t("Files it needs but does not carry, such as the model files of a process (TOA 3.5)"))}</p>${pre(yamlish(v.external))}`);
   if (v.origin) more.push(`<h3>${esc(t("Origin"))}</h3><p class="faint">${esc(t("Taken from a design outside TOA"))}</p>${pre(yamlish(v.origin))}`);
   if (v.netlist && v.netlist.length) more.push(`<h3>${esc(t("Netlist"))}</h3><p>${v.netlist.map(f => `<code>${esc(f)}</code>`).join(" ")}</p>`);
-  const recs = (v.records || []).map(c => [nameLink(c.name, names, { withShort: true }), (c.tbs || []).map(n => nameLink(n, names)).join("<br>"),
-    Object.entries(c.metrics || {}).map(([k, x]) => `<span class="mono">${esc(k)}</span> ${esc(fmtNum(x))}`).join("<br>"), libLinks(c.libraries), esc(fmtDate(c.first_date))]);
+  const recs = (v.records || []).map(c => [nameLink(c.name, names, { withShort: true }) + (c.kind === "mc" ? " " + tag(t("Monte Carlo")) : ""), (c.tbs || []).map(n => nameLink(n, names)).join("<br>"),
+    Object.entries(c.metrics || {}).map(([k, x]) => `<span class="mono">${esc(k)}</span> ${esc(valueText(x))}`).join("<br>"), libLinks(c.libraries), esc(fmtDate(c.first_date))]);
   const verify = panel(esc(t("Evidence")), (groupsTable(v.groups || [], names, { withDut: false }) ? groupsTable(v.groups || [], names, { withDut: false }) : "")
     + (recs.length ? table([esc(t("Record")), esc(t("Testbenches")), esc(t("Metrics")), esc(t("Libraries")), esc(t("First published"))], recs) : emptyBody(t("No evidence record of this circuit yet."))),
   { sub: esc(t("reproduction groups, then every record")) });
@@ -592,25 +629,41 @@ function cktPage(v, names) {
   return {
     title: v.display,
     html: objHead(v, { crumbs: [...ifcCrumb(v, names), esc(t("Circuits"))] }) + problemsAlert(v) + sameFilesAlert(v, names) + facts + readmePanel(v) + usesPanel + drawPanel(v, names)
-      + (more.length ? fold(esc(t("Specifications and parameters")), more.join("")) : "") + verify + lineagePanel(v, names) + placesPanel(v) + files + removalsPanel(v) + refByPanel(v, names),
+      + (more.length ? fold(esc(t("Specifications and parameters")), more.join("")) : "") + targetsPanel + verify + lineagePanel(v, names) + placesPanel(v) + files + removalsPanel(v) + refByPanel(v, names),
   };
 }
 
 function tbPage(v, names) {
   const ms = (v.metrics || []).map(m => [`<span class="mono">${esc(m.full)}</span>`, esc(m.unit || "—"), esc(m.better || "—"), m.tolerance ? esc(tolText(m.tolerance)) : st("warn", t("no tolerance")), esc(m.description || "")]);
   const sims = (v.simulators || []).map(s => esc([s.name, s.version].filter(x => x !== undefined && x !== null).join(" ")));
+  const RESULTS = { psfascii: t("PSF ASCII, a directory of files as Spectre writes it"), nutascii: t("the ASCII raw file of SPICE, one file results.raw") };
+  const probes = (v.probes || []).map(p => `<code>${esc(p.name)}</code>${p.known ? (p.description ? ` <span class="faint">${esc(p.description)}</span>` : "") : " " + st("warn", t("not a probe of the interface"))}`);
   const run = kv([
+    [esc(t("Block measured")) + " " + helpBtn(esc(t("The subcircuit its netlist instantiates for the block measured (socket). When a run is assembled, the circuit tested takes this name (TOA 7.6)."))), v.socket ? `<code>${esc(v.socket)}</code>` : null],
+    [esc(t("Probes")) + " " + helpBtn(esc(t("The probes of the interface its netlist observes, as <instance>.<probe>. Each evidence record says which net of the circuit tested each probe was."))), probes.length ? probes.join("<br>") : null],
     [esc(t("Netlist")), (v.netlist || []).length ? v.netlist.map(f => `<code>${esc(f)}</code>`).join(" ") : null],
     [esc(t("Run")), v.run ? `<code>${esc(v.run)}</code>` : null],
     [esc(t("Analysis")), v.analyze ? `<code>${esc(yamlish(v.analyze).replace(/\n/g, ", "))}</code>` : null],
+    [esc(t("Results")), v.results ? `<code>${esc(String(v.results))}</code>${RESULTS[v.results] ? ` <span class="faint">${esc(RESULTS[v.results])}</span>` : ""}` : null],
     [esc(t("Simulators")) + " " + helpBtn(esc(t("Simulators the author has run it with. For reference only: it may be run with another."))), sims.length ? sims.join("<br>") : null],
   ]);
   const extra = [];
   const pars = Object.entries(v.parameters && typeof v.parameters === "object" ? v.parameters : {});
   if (pars.length) extra.push(`<h3>${esc(t("Parameters"))}</h3>${table([esc(t("Name")), esc(t("Unit")), esc(t("Description"))], pars.map(([k, x]) => [`<code>${esc(k)}</code>`, esc((x && x.unit) || "—"), esc((x && x.description) || "")]))}`);
-  if (v.presets) extra.push(`<h3>${esc(t("Presets"))}</h3>${pre(yamlish(v.presets))}`);
+  // a set with statistics is run as a Monte Carlo simulation and gives a record of the kind mc (B37)
+  const anyStat = (v.presets || []).some(r => r.statistics);
+  const presets = (v.presets || []).map(r => ("raw" in r
+    ? [`<b>${esc(r.name)}</b>`, { html: pre(yamlish(r.raw)) }, dash, dash, ...(anyStat ? [dash] : [])]
+    : [`<b>${esc(r.name)}</b>${r.index ? ` <span class="faint">${esc(t("{i} of {n}", { i: r.index, n: r.count }))}</span>` : ""}`,
+      r.parameters !== undefined && r.parameters !== null ? `<span class="mono">${esc(slotText(r.parameters))}</span>` : dash,
+      r.options !== undefined && r.options !== null ? `<span class="mono">${esc(slotText(r.options))}</span>` : dash,
+      r.models !== undefined && r.models !== null ? modelsHtml(r.models) : dash,
+      ...(anyStat ? [r.statistics ? `${tag(t("Monte Carlo"))} <span class="mono">${esc(slotText(r.statistics))}</span>` : dash] : [])]));
+  const PRESETS_HELP = t("Named conditions to run it with. A preset is one set of conditions or a list of sets; each set is run once and gives one evidence record, so a sweep is a list with one set per point.")
+    + (anyStat ? " " + t("A set with statistics is a Monte Carlo simulation: its samples are drawn as the statistics say, and it gives a record of the kind mc. A run that leaves run out lets the user choose to run the samples each alone or all in one simulation.") : "");
+  if (presets.length) extra.push(`<h3>${esc(t("Presets"))} ${helpBtn(esc(PRESETS_HELP))}</h3>${table([esc(t("Preset")), esc(t("Parameters")), esc(t("Options")), esc(t("Models")), ...(anyStat ? [esc(t("Statistics"))] : [])], presets)}`);
   if (v.external) extra.push(`<h3>${esc(t("External files"))}</h3>${pre(yamlish(v.external))}`);
-  const recs = (v.records || []).map(c => [nameLink(c.name, names, { withShort: true }), nameLink(c.dut, names), libLinks(c.libraries), esc(fmtDate(c.first_date))]);
+  const recs = (v.records || []).map(c => [nameLink(c.name, names, { withShort: true }) + (c.kind === "mc" ? " " + tag(t("Monte Carlo")) : ""), nameLink(c.dut, names), libLinks(c.libraries), esc(fmtDate(c.first_date))]);
   const files = filesPanel(v);
   return {
     title: v.display,
@@ -627,6 +680,15 @@ function evdPage(v, names) {
   const g = v.group;
   const defs = v.metric_defs || {};
   const gm = new Map(((g && g.metrics) || []).map(m => [m.metric, m]));
+  const mc = v.kind === "mc";
+  const tolCell = d => (d ? (d.tolerance ? esc(tolText(d.tolerance)) : st("warn", t("no tolerance"))) : `<span class="faint">${esc(t("testbench not here"))}</span>`);
+  // a Monte Carlo simulation writes the statistics of each metric over its samples (B37)
+  const mcRows = Object.entries(v.metrics || {}).map(([k, x]) => {
+    const d = defs[k];
+    const s = isStats(x) ? x : {};
+    const n = (y, cls = "r num") => ({ html: y === undefined || y === null ? dash : esc(fmtNum(y)), cls });
+    return [`<span class="mono">${esc(k)}</span>`, esc((d && d.unit) || "—"), n(s.n), n(s.failed), n(s.mean), n(s.sigma), n(s.min), n(s.max), tolCell(d)];
+  });
   const mrows = Object.entries(v.metrics || {}).map(([k, x]) => {
     const d = defs[k];
     const m = gm.get(k);
@@ -635,7 +697,7 @@ function evdPage(v, names) {
   });
   const slot = (title, obj) => {
     if (!obj || (typeof obj === "object" && !Object.keys(obj).length)) return "";
-    if (Array.isArray(obj)) return `<h3>${esc(title)}</h3>${table(Object.keys(obj.reduce((a, o) => ({ ...a, ...o }), {})).map(esc), obj.map(o => Object.keys(obj.reduce((a, q) => ({ ...a, ...q }), {})).map(k => esc(o[k] === undefined ? "" : yamlish(o[k])))))}`;
+    if (Array.isArray(obj)) return `<h3>${esc(title)}</h3>${table(Object.keys(obj.reduce((a, o) => ({ ...a, ...o }), {})).map(esc), obj.map(o => Object.keys(obj.reduce((a, q) => ({ ...a, ...q }), {})).map(k => esc(o[k] === undefined ? "" : Array.isArray(o[k]) ? o[k].map(scalarText).join(", ") : yamlish(o[k])))))}`;
     return `<h3>${esc(title)}</h3>${table([esc(t("Name")), esc(t("Value"))], Object.entries(obj).map(([k, x]) => [`<code>${esc(k)}</code>`, `<span class="mono">${esc(yamlish(x))}</span>`]))}`;
   };
   // the slots come from the build in their order, by their names in TOA
@@ -643,9 +705,12 @@ function evdPage(v, names) {
   const tree = (v.lock_tree || []).map(r => [{ html: esc(String(r.index)), cls: "r num" }, nameLink(r.object, names, { withShort: true }), nameLink(r.ifc, names)]);
   const sim = v.simulator;
   const top = kv([
-    [esc(t("Kind")), `<code>${esc(v.kind)}</code> <span class="faint">${esc(t("a simulation"))}</span>`],
+    [esc(t("Kind")), `<code>${esc(v.kind)}</code> <span class="faint">${esc(mc ? t("a Monte Carlo simulation") : t("a simulation"))}</span>`],
+    [esc(t("Samples")), mc && v.statistics ? esc(runText({ first: v.statistics.first ?? 1, points: v.statistics.points, run: v.statistics.run })) : null],
     [esc(t("Circuit tested")), nameLink(v.dut, names, { withShort: true })],
     [esc(t("Testbenches")), (v.tbs || []).map(n => nameLink(n, names, { withShort: true })).join("<br>")],
+    [esc(t("Probes")) + " " + helpBtn(esc(t("The net of the circuit tested that each probe of the testbenches was, in this run: an input of the run, like the circuit and the conditions."))),
+      v.probes && v.probes.length ? v.probes.map(x => `<code>${esc(x.name)}</code> → <code>${esc(scalarText(x.net))}</code>${x.description ? ` <span class="faint">${esc(x.description)}</span>` : ""}`).join("<br>") : null],
     [esc(t("Simulator")), sim ? esc([sim.name, sim.version].filter(x => x !== undefined && x !== null).join(" ")) + (typeof sim.command === "string" ? `<br><code>${esc(sim.command)}</code>` : "") : null],
   ]);
   const ev = (v.evidence || []).map(e => [rawUrl(v.raw, e.path) ? `<a href="${esc(rawUrl(v.raw, e.path))}" target="_blank" rel="noopener noreferrer" class="mono">${esc(e.path)}</a>` : `<span class="mono">${esc(e.path)}</span>`, esc(e.kind || ""), esc(e.label || "")]);
@@ -655,12 +720,20 @@ function evdPage(v, names) {
     [esc(t("This record counts for")), v.counts_for ? libLink(v.counts_for) : null],
     [esc(t("Label")), multiMark(g)],
   ]))) : "";
+  // the samples of a Monte Carlo simulation, and how it compares with the others of its group (mc.js)
+  const MC_HELP = esc(t("Each sample is one simulation of the circuit with its own draw of the statistical variations. samples.csv holds the value of every metric for every sample; the record's statistics are computed from it by the tool. No yield is written: the targets of the circuit are held against the samples here, and a new target needs no new run (B37)."));
+  const mcBox = mc ? `<div data-mcbox="${register({ self: v.name, runs: v.runs || [], defs, targets: v.targets || [] })}">`
+    + panel(esc(t("Samples")) + " " + helpBtn(MC_HELP), `<div class="body" data-mc="samples"><p class="faint">${esc(t("Loading {file}…", { file: "evidence/samples.csv" }))}</p></div>`)
+    + ((v.runs || []).length >= 2 ? panel(esc(t("Other runs of this Monte Carlo simulation")), `<div class="body" data-mc="compare"></div>`, { sub: esc(t("the same circuit, testbenches, probes and conditions")) }) : "")
+    + `</div>` : "";
   const lockFold = hasFile(v, "lock.json") ? fold("<code>lock.json</code>", rawSlot(rawUrl(v.raw, "lock.json"), "lock", "lock.json"), { hint: t("the tree simulated, with the SHA-256 of every file") }) : "";
   return {
     title: v.display,
     html: objHead(v, { crumbs: [...ifcCrumb(v, names), v.dut ? nameLink(v.dut, names) : "", esc(t("Evidence records"))].filter(Boolean) }) + problemsAlert(v) + sameFilesAlert(v, names)
       + panel(esc(t("What was run")), bodyDiv(top))
-      + panel(esc(t("Metrics")), table([esc(t("Metric")), esc(t("Value")), esc(t("Tolerance")), esc(t("In its group"))], mrows) || emptyBody(t("No metrics.")))
+      + (mc ? panel(esc(t("Metrics")), table([esc(t("Metric")), esc(t("Unit")), { html: "n", cls: "r" }, { html: esc(t("failed")), cls: "r" }, { html: esc(t("mean")), cls: "r" }, { html: "σ", cls: "r" }, { html: esc(t("min")), cls: "r" }, { html: esc(t("max")), cls: "r" }, esc(t("Tolerance"))], mcRows) || emptyBody(t("No metrics.")), { sub: esc(t("over the samples")) })
+        : panel(esc(t("Metrics")), table([esc(t("Metric")), esc(t("Value")), esc(t("Tolerance")), esc(t("In its group"))], mrows) || emptyBody(t("No metrics."))))
+      + mcBox
       + grp
       + panel(esc(t("Conditions")), bodyDiv(conds || `<p class="empty">${esc(t("None written."))}</p>`) + (v.environment && Object.keys(v.environment).length ? bodyDiv(`<h3>${esc(t("Environment"))}</h3>${pre(yamlish(v.environment))}`) : ""))
       + panel(esc(t("Tree simulated")), (tree.length ? table([{ html: "#", cls: "r" }, esc(t("Circuit")), esc(t("Interface"))], tree) : emptyBody(t("No tree in the index."))) + (lockFold ? bodyDiv(lockFold) : ""), { sub: esc(t("from lock.json")) })
@@ -710,6 +783,16 @@ function libObjectPage(v, names) {
     return `<h3>${g.group ? esc(g.group) : `<span class="faint">${esc(t("no group"))}</span>`} <span class="hint">${esc(t("{n} objects", { n: g.members.length }))}</span></h3>`
       + table([esc(t("Object")), esc(t("Label")), esc(t("License")), esc(t("Sources"))], rows);
   }).join("");
+  // a frozen library whose members hold testbenches is a test plan (type lib)
+  const plan = v.plan;
+  const presetHtml = x => `<code>${esc(x.name)}</code>${x.sets > 1 ? ` <span class="faint">${esc(t("{n} sets", { n: x.sets }))}</span>` : ""}${x.mc ? " " + tag(t("Monte Carlo")) : ""}`;
+  const planPanel = plan ? panel(esc(t("Test plan")) + " " + helpBtn(esc(t("A frozen library whose members are an interface and the testbenches that measure it, with circuits when needed (type lib). Each testbench can still be run alone; the conditions they share are written in the presets of each."))),
+    bodyDiv(kv([
+      [esc(t("Interface")), plan.ifcs.length ? plan.ifcs.map(n => nameLink(n, names, { withShort: true })).join("<br>") : null],
+      [esc(t("Circuits")), plan.ckts.length ? plan.ckts.map(n => nameLink(n, names, { withShort: true })).join("<br>") : null],
+    ])) + table([esc(t("Testbench")), esc(t("Metrics")), esc(t("Presets"))], plan.tbs.map(r => [nameLink(r.tb, names, { withShort: true }),
+      r.metrics.length ? r.metrics.map(m => `<span class="mono">${esc(m)}</span>`).join("<br>") : dash,
+      r.presets.length ? r.presets.map(presetHtml).join("<br>") : dash]))) : "";
   const cut = mb.count > mb.shown ? `<p class="faint">${esc(t("The first {n} lines are shown; the list has {m}.", { n: mb.shown, m: mb.count }))}</p>` : "";
   const help = esc(t("The list of members (members.source.jsonl) is part of the object, so it never changes: it says which objects there were at one moment and where to find them. Labels, groups and sources are as its author wrote them. An object not in this instance is shown faint."));
   const list = !v.has_members ? emptyBody(t("This frozen library has no list of members."))
@@ -718,7 +801,7 @@ function libObjectPage(v, names) {
   return {
     title: v.display,
     html: objHead(v, { crumbs: [esc(t("Frozen libraries"))] }) + problemsAlert(v) + sameFilesAlert(v, names) + (facts ? panel(esc(t("Frozen library")), bodyDiv(facts)) : "")
-      + panel(esc(t("Members")) + " " + helpBtn(help), list, { sub: mb.read ? esc(t("{n} groups", { n: mb.groups.length })) : "" })
+      + planPanel + panel(esc(t("Members")) + " " + helpBtn(help), list, { sub: mb.read ? esc(t("{n} groups", { n: mb.groups.length })) : "" })
       + lineagePanel(v, names) + placesPanel(v) + filesPanel(v) + removalsPanel(v) + refByPanel(v, names),
   };
 }
@@ -830,6 +913,8 @@ export async function pageUpdates() {
 export function pageAbout() {
   const s = S.site;
   const rows = kv([
+    [esc(t("Last scanned")), `${esc(fmtTime((S.scan || {}).scanned || s.built))}<span class="sub">${esc(t("When a run last checked the libraries, whether or not anything had changed."))}</span>`],
+    [esc(t("Content last changed")), `${esc(fmtTime((S.scan || {}).changed || s.built))}<span class="sub">${esc(t("When the last build that found a change ran: in a library, in the code of this site or in its tools."))}</span>`],
     [esc(t("Built")), esc(s.built)],
     [esc(t("Index")), `${esc(s.index.tool || "")} · ${esc(t("TOA {v}", { v: s.index.standard || "?" }))} · ${esc(s.index.built || "")}`],
     [esc(t("Site address")), s.site_url ? `<a href="${esc(s.site_url)}">${esc(s.site_url)}</a>` : esc(t("not set"))],

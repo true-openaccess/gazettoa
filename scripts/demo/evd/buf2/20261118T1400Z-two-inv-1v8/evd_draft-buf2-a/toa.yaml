@@ -1,0 +1,18 @@
+type: evd
+kind: sim
+license: CC0-1.0
+author: Gazettoa
+dut: ckt_draft-buf2-inv
+tbs: [tb_draft-buf2-delay]
+probes: {stage1: mid}
+conditions:
+  parameters: {vdd: 1.8}
+  options: {temp: 27}
+  models:
+  - {file: demo.lib, section: tt}
+environment:
+  simulator: {name: ngspice, version: '44.2'}
+  analysis: {python: '3.12.3'}
+metrics:
+  tb_buf2_delay.tpd: 61.7
+  tb_buf2_delay.tpd1: 29.6

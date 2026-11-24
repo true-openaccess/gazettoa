@@ -59,7 +59,7 @@
     {
       "library": "official-chen",
       "path": "doc/strongarm-comp/kickback/doc_907ce675ba8c9de5c17d38c1af20c9d2f5b4f071",
-      "first_commit": "729a41f321c65a196092eb9d3b447afa17f3c9ff",
+      "first_commit": "9a845a65769269f278a9bc72503aeae60754e4a5",
       "first_date": "2026-11-09T08:30:00+08:00",
       "first_signature": null,
       "notes": [],
@@ -71,7 +71,7 @@
   ],
   "first": {
     "library": "official-chen",
-    "commit": "729a41f321c65a196092eb9d3b447afa17f3c9ff",
+    "commit": "9a845a65769269f278a9bc72503aeae60754e4a5",
     "date": "2026-11-09T08:30:00+08:00",
     "signature": null
   },

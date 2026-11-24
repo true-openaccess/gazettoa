@@ -1,7 +1,8 @@
 // Gazettoa: the page chrome (top bar, theme, language, quick search), the router, and the
 // filling of slots with files fetched from libraries.
-import { S, t, esc, getJSON, getText, getBytes, decodeText, sha256Hex, rawUrl, st, REG, renderMd, toast, short, prefixOf, NAME_RE, fmtDate, RNL_RECORD, textForViewer, SHOW_MAX } from "./core.js";
+import { S, t, esc, getJSON, getText, getBytes, decodeText, sha256Hex, rawUrl, st, REG, renderMd, toast, short, prefixOf, NAME_RE, RNL_RECORD, textForViewer, SHOW_MAX, scanTimes } from "./core.js";
 import { mountSelection } from "./selection.js";
+import { mountMc } from "./mc.js";
 import { pageHome, pageIfcName, pageIfc, pageObject, pageLibrary, pageSearch, pageUpdates, pageAbout, pageAgent, srcLabel } from "./pages.js";
 
 const app = document.getElementById("app");
@@ -90,7 +91,7 @@ function paintChrome() {
   const foot = document.querySelector("#site-foot .wrap");
   if (s) {
     foot.innerHTML = [
-      `<span>${esc(t("Built {d}", { d: fmtDate(s.built) }))}</span>`,
+      ...scanTimes(),
       `<span>${esc(t("Index by {tool}, TOA {v}", { tool: s.index.tool || "toa", v: s.index.standard || "?" }))}</span>`,
       `<span>${esc(t("Objects are their authors'; each keeps its own license."))}</span>`,
       `<a href="#/agent">${esc(t("For agents"))}</a>`,
@@ -442,6 +443,7 @@ function hydrate(scope) {
   for (const el of scope.querySelectorAll("[data-files]")) mountFiles(el);
   for (const el of scope.querySelectorAll("[data-draw]")) mountDrawing(el);
   for (const el of scope.querySelectorAll("[data-sel]")) { const d = REG.get(el.dataset.sel); if (d) mountSelection(el, d); }
+  for (const el of scope.querySelectorAll("[data-mcbox]")) { const d = REG.get(el.dataset.mcbox); if (d) mountMc(el, d); }
   for (const el of scope.querySelectorAll(".raw-slot[data-raw]")) {
     const url = el.dataset.raw;
     getText(url).then(text => {
@@ -525,8 +527,11 @@ let lastPage = null;
 /* ---------------------------------------------------------------- start */
 (async function start() {
   try {
-    const [site, langs] = await Promise.all([getJSON("data/site.json", { fresh: true }), getJSON("i18n/languages.json").catch(() => null)]);
+    // scan.json changes on every run of the workflow, also one that builds nothing: asked fresh
+    const [site, langs, scan] = await Promise.all([getJSON("data/site.json", { fresh: true }), getJSON("i18n/languages.json").catch(() => null),
+      getJSON("data/scan.json", { fresh: true }).catch(() => null)]);
     S.site = site;
+    S.scan = scan && typeof scan === "object" ? scan : null;
     S.langs = (langs && langs.languages) || [{ code: "en", name: "English", short: "EN" }];
   } catch (e) {
     app.innerHTML = `<div class="alert"><h3>No data</h3><p>data/site.json could not be read: ${esc(e.message)}. Build the site with <code>python -m gaze build</code>.</p></div>`;

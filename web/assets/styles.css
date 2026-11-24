@@ -164,7 +164,7 @@ th.sort{cursor:pointer;user-select:none}
 th.sort:hover{color:var(--ink)}
 th.sort.on{color:var(--accent)}
 .th-cond{display:block;font-weight:400;font-size:var(--fs-1);color:var(--faint)}
-td .sub{display:block;color:var(--faint);font-size:var(--fs-1);margin-top:1px}
+td .sub,.kv dd .sub{display:block;color:var(--faint);font-size:var(--fs-1);margin-top:1px}
 .lib-tbl td,.ds-tbl td{vertical-align:middle}
 .lib-tbl td{padding-block:13px}
 .lib-tbl{table-layout:fixed;min-width:760px}
@@ -512,6 +512,27 @@ details.gen-fold ul.plain{margin-top:6px;gap:4px}
 .sel-sort .sub{display:block;font-weight:400;font-size:var(--fs-1);color:var(--faint)}
 .sel-table td.r{white-space:nowrap}
 .sel-tags{display:inline-flex;gap:6px;margin-left:4px}
+/* a target of the circuit beside a value (B36): met, missed, or nothing to judge */
+.sel-tgt{font-size:var(--fs-1);color:var(--faint);font-family:var(--mono);white-space:nowrap}
+.sel-tgt.ok{color:var(--ok)} .sel-tgt.ok::before{content:"✓ "}
+.sel-tgt.miss{color:var(--bad)} .sel-tgt.miss::before{content:"✗ "}
+.tgt-ok{color:var(--ok)} .tgt-miss{color:var(--bad)}
+/* the targets on the scatter plot (B36), and the samples of a Monte Carlo simulation (B37) */
+.sc-tgt{stroke:var(--bad);stroke-width:1.2;stroke-dasharray:6 4;opacity:.75}
+.sc-tgt-label{fill:var(--bad);font-size:10.5px;font-family:var(--mono)}
+.sc-miss{fill:none;stroke:var(--bad);stroke-width:1.6}
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px;margin:10px 0}
+.mc-card{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--surface);min-width:0;font-size:var(--fs-1)}
+.mc-card-head{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;overflow-wrap:anywhere}
+.mc-svg{display:block;width:100%;height:auto;margin:4px 0}
+.mc-bar{fill:var(--accent);opacity:.7}
+.mc-mean{stroke:var(--ink);stroke-width:1.5}
+.mc-sigma{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.mc-tgt{stroke:var(--bad);stroke-width:1.5;stroke-dasharray:6 4}
+.mc-legend i{display:inline-block;width:16px;height:0;vertical-align:middle;margin:0 4px 0 10px}
+.mc-legend i:first-child{margin-left:0}
+.mc-key-mean{border-top:2px solid var(--ink)} .mc-key-sigma{border-top:1px dashed var(--muted)} .mc-key-tgt{border-top:2px dashed var(--bad)}
+.mc-table{max-height:420px;overflow:auto}
 .sel-plot{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;background:var(--surface)}
 .sc-svg{display:block;width:100%;max-width:760px;height:auto;margin:4px 0}
 .sc-grid{stroke:var(--line);stroke-width:1}

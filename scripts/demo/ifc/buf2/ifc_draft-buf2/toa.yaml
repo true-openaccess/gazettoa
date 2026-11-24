@@ -8,3 +8,5 @@ pins:
 - {name: "y", kind: digital, direction: out}
 - {name: vdd, kind: supply}
 - {name: vss, kind: ground}
+probes:
+- {name: stage1, description: The output of the first inverter inside the buffer}

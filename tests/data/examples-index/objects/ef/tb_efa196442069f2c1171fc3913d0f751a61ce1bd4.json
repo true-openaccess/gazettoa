@@ -1,0 +1,184 @@
+{
+  "toa-index": 2,
+  "name": "tb_efa196442069f2c1171fc3913d0f751a61ce1bd4",
+  "prefix": "tb",
+  "present": true,
+  "valid": true,
+  "problems": [],
+  "sha256": "2f4bd59a225fe62cb562b9f4dfb1239259115eb10d282144c185605a3039bf6e",
+  "manifest": {
+    "type": "tb",
+    "license": "CC0-1.0",
+    "ifc": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+    "base": [
+      "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e"
+    ],
+    "name": "tb_offset",
+    "title": "Input-referred offset by a slow ramp",
+    "socket": "strongarm_comp",
+    "files": {
+      "netlist": [
+        "tb.scs"
+      ]
+    },
+    "simulators": [
+      {
+        "name": "spectre",
+        "version": "21.1"
+      }
+    ],
+    "run": "spectre input.scs +aps -format psfascii -raw psf",
+    "analyze": {
+      "entry": "analyze.py",
+      "python": ">=3.10",
+      "results": "psfascii"
+    },
+    "metrics": [
+      {
+        "id": "offset",
+        "unit": "mV",
+        "better": "lower",
+        "tolerance": {
+          "abs": 0.2
+        }
+      }
+    ],
+    "parameters": {
+      "vdd": {
+        "unit": "V",
+        "description": "Supply voltage"
+      }
+    },
+    "presets": {
+      "nom": {
+        "parameters": {
+          "vdd": 1.8
+        },
+        "options": {
+          "temp": 27
+        },
+        "models": [
+          {
+            "file": "sky130.lib.spice",
+            "section": "tt",
+            "process": "sky130"
+          }
+        ]
+      },
+      "supply": [
+        {
+          "parameters": {
+            "vdd": 1.62
+          },
+          "options": {
+            "temp": 27
+          },
+          "models": [
+            {
+              "file": "sky130.lib.spice",
+              "section": "tt",
+              "process": "sky130"
+            }
+          ]
+        },
+        {
+          "parameters": {
+            "vdd": 1.98
+          },
+          "options": {
+            "temp": 27
+          },
+          "models": [
+            {
+              "file": "sky130.lib.spice",
+              "section": "tt",
+              "process": "sky130"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "title": "Input-referred offset by a slow ramp",
+  "references": [
+    {
+      "name": "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
+      "at": "toa.yaml:ifc"
+    },
+    {
+      "name": "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e",
+      "at": "toa.yaml:base/0"
+    }
+  ],
+  "base": [
+    "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e"
+  ],
+  "history": {
+    "listed": [
+      "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e"
+    ],
+    "verified": [
+      "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e"
+    ],
+    "declared": [],
+    "nearest": null,
+    "state": "verified",
+    "generation": 2,
+    "generation_state": "verified"
+  },
+  "files": [
+    {
+      "path": "analyze.py",
+      "size": 186,
+      "blob": "b50b4bda5884f783f95dcdd23534826824a001b5",
+      "sha256": "e71c2dee2242150320f408297bf273a2fcefb35a820254c66f2c0dbe7cfe8079"
+    },
+    {
+      "path": "history.json",
+      "size": 92,
+      "blob": "204c1cc625d260fe729f087a9bdae6958935f265",
+      "sha256": "85f27115894bcc555db6759095a344153fec50bcd51b795af05ef324188eb9aa"
+    },
+    {
+      "path": "tb.scs",
+      "size": 373,
+      "blob": "acc44b41ee43e9e69be62b5604a887d182de0973",
+      "sha256": "79fbf269c32e1d60a4c5fcf9a40f430a2fb061feec0a436dcded07d6eab36862"
+    },
+    {
+      "path": "toa.yaml",
+      "size": 937,
+      "blob": "a6ef109fb8277270858755974aac7e57dd524790",
+      "sha256": "6c8b74d7a21d608b5a5414233e96d45016b04d9783d6c9c3dd7dfc2da55f0581"
+    }
+  ],
+  "locations": [
+    {
+      "library": "official",
+      "path": "tb/strongarm-comp/tb_offset.g2/tb_efa196442069f2c1171fc3913d0f751a61ce1bd4",
+      "first_commit": "230188cc30c9442711f2396ef403bb0902a0b198",
+      "first_date": "2026-11-24T09:00:00+08:00",
+      "first_signature": null,
+      "notes": [],
+      "stamps": [],
+      "source_list": "tb/strongarm-comp/tb_offset.g2/tb_efa196442069f2c1171fc3913d0f751a61ce1bd4.source.jsonl",
+      "label": "strongarm-comp/tb_offset.g2",
+      "latest": true
+    }
+  ],
+  "first": {
+    "library": "official",
+    "commit": "230188cc30c9442711f2396ef403bb0902a0b198",
+    "date": "2026-11-24T09:00:00+08:00",
+    "signature": null
+  },
+  "same_files": {
+    "earlier": [],
+    "later": [],
+    "common": []
+  },
+  "removals": [],
+  "referenced_by": [],
+  "base_by": [],
+  "newer": []
+}

@@ -1,6 +1,14 @@
 # Builds the site of this instance from the libraries its workspace list includes
-# (instance/workspace.source.jsonl) and publishes it with GitHub Pages: every 30 minutes, by
-# hand, and when the instance or the site's code changes.
+# (instance/workspace.source.jsonl) and publishes it with GitHub Pages: twice an hour, by hand, and
+# when the instance or the site's code changes.
+#
+# Every run first reads the head of the branch of every library (git ls-remote, which fetches
+# nothing) and compares them, this repository's commit and the tools with what the last site was
+# built from (scripts/scan.py). When all are the same, no library is read and no page is built: the
+# last site is published again with only its scan time new (data/scan.json), so that its pages say
+# when the libraries were last checked as well as when their content last changed. Otherwise the
+# site is built in full: when something changed (a push always changes this repository's commit),
+# when something could not be read, so that the problem shows, and on a run by hand.
 #
 # Reading is incremental: the last index, the last site and toa's cache are kept in the Actions
 # cache, so a library whose commit did not move is skipped, and only new objects are read.
@@ -10,7 +18,11 @@ name: Gazettoa site
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    # Twice an hour, off the full and the half hour: GitHub delays scheduled runs under load, and
+    # drops some, most of all at the start of an hour (its documentation of `schedule`). A
+    # schedule is taken from the default branch when this file changes there; if it still never
+    # runs, turning the workflow off and on again (Actions > Gazettoa site) takes it anew.
+    - cron: "7,37 * * * *"
   push:
     branches: [main]
     paths:
@@ -68,7 +80,7 @@ jobs:
         run: |
           if [ -f .work/site/data/site.json ] || [ -z "$SITE_URL" ]; then exit 0; fi
           mkdir -p .work/site/data
-          for f in site.json search.json changes.json seen.json swh.json signatures.json; do
+          for f in site.json search.json changes.json seen.json swh.json signatures.json scan.json; do
             code=$(curl -sS -L -o ".work/site/data/$f" -w '%{http_code}' "${SITE_URL%/}/data/$f" || echo 000)
             case "$code" in
               200) ;;
@@ -78,7 +90,17 @@ jobs:
           done
           # nothing published yet: no previous site
           if [ ! -f .work/site/data/site.json ]; then rm -rf .work/site; fi
+      # The stamp of what this run would read against the one in data/scan.json of the last site.
+      # Only a whole last site (from the cache) is published again; records taken back from the
+      # published site keep the time the content last changed, and the site is built in full.
+      - name: Has anything changed since the last site?
+        id: check
+        run: python3 scripts/scan.py check instance/workspace.source.jsonl .work/site
+      - name: Nothing changed
+        if: steps.check.outputs.full != 'true'
+        run: echo "::notice::No library, no code and no tool changed since the last build; the last site is published again with the new scan time."
       - name: Check TOA_COMMIT
+        if: steps.check.outputs.full == 'true'
         run: |
           case "$TOA_COMMIT" in
             "") echo "::error::TOA_COMMIT is not set: name the commit of $TOA_REPO to build toa from (gaze-pages.yml, env). The published site stays as it was."; exit 1 ;;
@@ -86,13 +108,14 @@ jobs:
           esac
           if [ ${#TOA_COMMIT} -ne 40 ]; then echo "::error::TOA_COMMIT must be a full commit id of 40 hexadecimal digits."; exit 1; fi
       - name: The toa built from that commit before
+        if: steps.check.outputs.full == 'true'
         id: toa-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .toa-bin
           key: toa-bin-${{ env.TOA_COMMIT }}-rust-${{ env.TOA_RUST }}-${{ runner.os }}-${{ runner.arch }}
       - name: Build toa from its source
-        if: steps.toa-cache.outputs.cache-hit != 'true'
+        if: steps.check.outputs.full == 'true' && steps.toa-cache.outputs.cache-hit != 'true'
         run: |
           src="$RUNNER_TEMP/toa-src"
           git init -q "$src"
@@ -104,18 +127,21 @@ jobs:
           mkdir -p "$TOA_BIN"
           install -m 755 "$src/target/release/toa" "$TOA_BIN/toa"
       - name: Keep the toa built, for the next runs
-        if: steps.toa-cache.outputs.cache-hit != 'true'
+        if: steps.check.outputs.full == 'true' && steps.toa-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .toa-bin
           key: ${{ steps.toa-cache.outputs.cache-primary-key }}
       - name: Install rnl; put toa on PATH
+        if: steps.check.outputs.full == 'true'
         run: |
           sh scripts/install-tool.sh "$RNL_URL" "$RNL_SHA256" rnl "$RUNNER_TEMP/bin"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
           echo "$TOA_BIN" >> "$GITHUB_PATH"
           "$TOA_BIN/toa" --version
       - name: Read the libraries (toa index)
+        if: steps.check.outputs.full == 'true'
+        id: index
         run: |
           set +e
           toa index --workspace instance/workspace.source.jsonl --out .work/index
@@ -123,10 +149,13 @@ jobs:
           set -e
           case "$code" in
             0) ;;
-            4) echo "::warning::Some libraries could not be fetched this time; the site shows what was read of them before." ;;
+            # marked in data/scan.json, so that the next run reads them again even when no head moved
+            4) echo "::warning::Some libraries could not be fetched this time; the site shows what was read of them before."
+               echo "partial=true" >> "$GITHUB_OUTPUT" ;;
             *) echo "::error::toa index could not run (exit code $code); the published site stays as it was."; exit 1 ;;
           esac
       - name: Build the site
+        if: steps.check.outputs.full == 'true'
         env:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
           # to ask GitHub whether the signed commits of libraries on github.com verified (read only)
@@ -135,7 +164,18 @@ jobs:
           cd builder
           python3 -m gaze build --instance ../instance --index ../.work/index --out ../.work/site \
             --toa "$(command -v toa)" --rnl "$(command -v rnl)" --site-url "$SITE_URL"
+      # On every run, also one that built nothing: when this scan was, when the content last changed
+      # (kept from the last site when the stamp is the same), and the stamp.
+      - name: The time of this scan
+        env:
+          STAMP: ${{ steps.check.outputs.stamp }}
+          CHANGED: ${{ steps.check.outputs.changed }}
+          PARTIAL: ${{ steps.index.outputs.partial }}
+        run: python3 scripts/scan.py write .work/site --stamp "$STAMP" --changed "$CHANGED" ${PARTIAL:+--partial}
+      # Only a full build is kept: a run that built nothing changed only the scan time, which the
+      # next run writes anew, so it adds no cache entry.
       - name: Keep the index, site and cache of toa for the next run
+        if: steps.check.outputs.full == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .work

@@ -87,7 +87,7 @@
     {
       "library": "alice",
       "path": "ckt/strongarm-comp/wrap-lee.g2/ckt_50231b67183e5ba6c367288e24e9a3c38756e3e8",
-      "first_commit": "0cff6716932510b28305a883c41baf258cfe72df",
+      "first_commit": "4435296b6115e9f3f57d919ef46769f7a4a83c59",
       "first_date": "2026-11-12T12:00:00Z",
       "first_signature": null,
       "notes": [],
@@ -99,7 +99,7 @@
   ],
   "first": {
     "library": "alice",
-    "commit": "0cff6716932510b28305a883c41baf258cfe72df",
+    "commit": "4435296b6115e9f3f57d919ef46769f7a4a83c59",
     "date": "2026-11-12T12:00:00Z",
     "signature": null
   },

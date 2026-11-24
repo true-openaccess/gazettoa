@@ -1,7 +1,8 @@
 """Tests of the builder. Run from gaze/: python -m unittest discover -s tests
 
 tests/data/examples-index/ is what `toa index` (toa 0.1.0, index format 2) wrote for the small
-examples of toa (toa/examples/ in the toa repository, with the names of B32 and B33):
+examples of toa (toa/examples/ in the toa repository, with the names of B32 and B33, and the
+testbench tb_offset.g2 of B36):
 scripts/examples.py builds the example repositories in .work/examples/repos, then
 `toa index --workspace .work/examples/repos/workspace.source.jsonl --out tests/data/examples-index --offline`.
 
@@ -43,9 +44,10 @@ CKT_LOWKICK = "ckt_ddeacf24a1ad98201f1e46b00ddcabd3e47da576"
 CKT_LEE1 = "ckt_3c536534c19f4fd08f986bf49cac879d98f62da4"
 CKT_LEE2 = "ckt_4fc19b9fa24339682172aa51ef465bdaff46fe34"
 TB = "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e"
+TB2 = "tb_efa196442069f2c1171fc3913d0f751a61ce1bd4"   # tb_offset.g2, written by B36
 EVD = "evd_67a30a965e94ff7d0fe8f1472b1ee51d54b09a85"
 DOC = "doc_907ce675ba8c9de5c17d38c1af20c9d2f5b4f071"
-LIB_OFFICIAL = "lib_cf125e93948ecdee725718e666cf7aa1be126799"
+LIB_OFFICIAL = "lib_1b995a48386069233dc1676aa6eaadb03a8dec89"
 
 
 def load(path: Path):
@@ -125,7 +127,7 @@ class IndexReading(unittest.TestCase):
     def test_reads_format_2(self):
         idx = read(DATA)
         self.assertEqual([lib["key"] for lib in idx.libraries], ["official", "lee", "alice", "official-chen"])
-        self.assertEqual(len(idx.objects), 12)
+        self.assertEqual(len(idx.objects), 13)
         self.assertFalse(idx.objects[CKT_LEE1]["present"])
 
     def test_stops_on_another_version(self):
@@ -304,9 +306,15 @@ class MultiParty(unittest.TestCase):
     def test_equality_is_within_tolerance(self):
         self.assertFalse(self.group([(R1, "a", 1.0), (R2, "b", 1.25)], {"abs": 0.25})["disagree"])
 
-    def test_relative_tolerance_scales_with_the_median(self):
+    def test_relative_tolerance_scales_with_the_larger_value(self):
+        # B36 (type tb): |a - b| <= max(abs, rel * max(|a|, |b|))
         self.assertFalse(self.group([(R1, "a", 100.0), (R2, "b", 102.0)], {"rel": 0.03})["disagree"])
         self.assertTrue(self.group([(R1, "a", 100.0), (R2, "b", 104.0)], {"rel": 0.03})["disagree"])
+        # within rel of the larger value, though not of the median
+        self.assertFalse(self.group([(R1, "a", 100.0), (R2, "b", 103.05)], {"rel": 0.03})["disagree"])
+        self.assertTrue(self.group([(R1, "a", 100.0), (R2, "b", 103.05)], {"rel": 0.03, "abs": 0.5})["metrics"][0]["agree"])
+        # abs and rel together: the larger bound
+        self.assertFalse(self.group([(R1, "a", 1.0), (R2, "b", 1.4)], {"rel": 0.01, "abs": 0.5})["disagree"])
 
     def test_one_repository_is_not_multi_party_and_not_a_problem(self):
         g = self.group([(R1, "a", 1.0), (R2, "a", 1.0)])
@@ -365,10 +373,240 @@ class MultiParty(unittest.TestCase):
         v = Model(idx, config.Config()).view(R2, {}, {})
         self.assertEqual((v["kind"], v["known_kind"]), ("silicon", False))
 
+    def test_probes_are_an_input_of_the_run(self):
+        # B36 (type evd): the net each probe was is an input of the run, like dut and the conditions
+        idx = synthetic([(R1, "a", 1.0), (R2, "b", 1.0), (R3, "c", 1.0)])
+        for r in (R1, R2):
+            idx.objects[r]["manifest"]["probes"] = {"latch_p": "LP"}
+        idx.objects[R3]["manifest"]["probes"] = {"latch_p": "xlatch.LP"}
+        gs = repro.build_groups(idx)
+        self.assertEqual(sorted(len(g["records"]) for g in gs), [1, 2])
+        both = next(g for g in gs if len(g["records"]) == 2)
+        self.assertEqual(both["probes"], {"latch_p": "LP"})
+        self.assertTrue(both["multi_party"])
+
+    def test_without_probes_a_group_keeps_its_id(self):
+        # the key of a group is what it was before B36 when its records have no probes
+        g = self.group([(R1, "a", 1.0), (R2, "b", 1.1)])
+        self.assertIsNone(g["probes"])
+        self.assertEqual(g["key"].count("|"), 2)
+
     def test_group_ids_are_stable(self):
         a = self.group([(R1, "a", 1.0), (R2, "b", 1.1)])["id"]
         b = self.group([(R2, "b", 1.1), (R1, "a", 1.0)])["id"]
         self.assertEqual(a, b)
+
+
+IFC_X = "ifc_" + "3" * 40
+
+
+def with_b36(idx: Index) -> Index:
+    """The synthetic index with what B36 adds: an interface with a probe, a testbench with a socket,
+    probes, the format of its results and presets, and targets on the circuit."""
+    dut, tb = "ckt_" + "1" * 40, "tb_" + "2" * 40
+    idx.objects[IFC_X] = {"name": IFC_X, "prefix": "ifc", "present": True, "valid": True,
+                          "manifest": {"type": "ifc", "name": "x", "pins": [{"name": "a"}],
+                                       "probes": [{"name": "latch_p", "description": "Positive node of the latch"}]},
+                          "referenced_by": [{"name": tb, "at": "toa.yaml:ifc"}, {"name": dut, "at": "toa.yaml:ifc"}]}
+    idx.objects[tb]["manifest"].update(ifc=IFC_X, socket="x_core", probes=["latch_p", "tail"],
+                                       analyze={"entry": "analyze.py", "python": ">=3.10", "results": "psfascii"},
+                                       presets={"nom": {"parameters": {"vdd": 1.8}, "options": {"temp": 27}},
+                                                "low": [{"parameters": {"vdd": 1.2}, "options": {"temp": 27.0}},
+                                                        {"parameters": {"vdd": 1.1}, "options": {"temp": 27}}],
+                                                "odd": "not a set"})
+    idx.objects[dut]["manifest"]["specifications"] = {"process": "x", "targets": {
+        "tb_x.m": [{"max": 1.5, "preset": "nom"}, {"min": 0.5}],
+        "tb_x.q": {"min": 1, "max": 2, "preset": "none-such"},
+        "tb_x.bad": {"preset": "nom"}}}
+    return idx
+
+
+class B36(unittest.TestCase):
+    """Socket, probes, results, presets listed flat, and targets (B36)."""
+    def setUp(self):
+        self.idx = with_b36(synthetic([(R1, "a", 1.0), (R2, "b", 1.0), (R3, "a", 3.0)], {"abs": 0.2}))
+        for r in (R1, R2, R3):
+            self.idx.objects[r]["manifest"]["conditions"] = {"parameters": {"vdd": 1.8}, "options": {"temp": 27}}
+            self.idx.objects[r]["manifest"]["probes"] = {"latch_p": "LP"}
+        self.idx.objects[R3]["manifest"]["conditions"] = {"parameters": {"vdd": 1.2}, "options": {"temp": 27}}
+        self.model = Model(self.idx, config.Config())
+        self.groups = repro.build_groups(self.idx)
+        self.dut, self.tb = "ckt_" + "1" * 40, "tb_" + "2" * 40
+
+    def by_dut(self):
+        out = {}
+        for g in self.groups:
+            out.setdefault(g["dut"], []).append(g)
+        return out
+
+    def test_interface_probes(self):
+        v = self.model.view(IFC_X, {}, {})
+        self.assertEqual(v["probes"], [{"name": "latch_p", "description": "Positive node of the latch"}])
+
+    def test_testbench(self):
+        v = self.model.view(self.tb, {}, {})
+        self.assertEqual(v["socket"], "x_core")
+        self.assertEqual(v["results"], "psfascii")
+        self.assertEqual(v["analyze"], {"entry": "analyze.py", "python": ">=3.10"})
+        # each probe with what the interface says of it; one the interface lacks is marked
+        self.assertEqual([(p["name"], p["known"], p["description"]) for p in v["probes"]],
+                         [("latch_p", True, "Positive node of the latch"), ("tail", False, None)])
+        # one row per set of conditions; a list counts from 1; what is not a set is shown as written
+        self.assertEqual([(r["name"], r.get("index"), r.get("count")) for r in v["presets"]],
+                         [("nom", None, 1), ("low", 1, 2), ("low", 2, 2), ("odd", None, None)])
+        self.assertEqual(v["presets"][1]["parameters"], {"vdd": 1.2})
+        self.assertEqual(v["presets"][3]["raw"], "not a set")
+
+    def test_record_probes(self):
+        v = self.model.view(R1, {}, {})
+        self.assertEqual(v["probes"], [{"name": "latch_p", "net": "LP", "description": "Positive node of the latch"}])
+        self.assertIsNone(Model(synthetic([(R1, "a", 1.0)]), config.Config()).view(R1, {}, {})["probes"])
+
+    def test_conditions_compare_as_data(self):
+        from gaze import targets
+        self.assertEqual(targets.cond_key({"options": {"temp": 27.0}, "parameters": {"vdd": 1.8}}),
+                         targets.cond_key({"parameters": {"vdd": 1.8}, "options": {"temp": 27}, "note": "x"}))
+        self.assertNotEqual(targets.cond_key({"parameters": {"vdd": 1.8}}), targets.cond_key({"parameters": {"vdd": 1.2}}))
+
+    def test_circuit_targets(self):
+        v = self.model.view(self.dut, {}, self.by_dut())
+        self.assertNotIn("targets", v["specifications"])   # shown apart, not among the other specifications
+        tg = v["targets"]
+        # the order written, a list giving one target each; an entry without min or max is left out
+        self.assertEqual([(x["metric"], x["min"], x["max"], x["preset"]) for x in tg],
+                         [("tb_x.m", None, 1.5, "nom"), ("tb_x.m", 0.5, None, None), ("tb_x.q", 1.0, 2.0, "none-such")])
+        # under nom: only the records at 1.8 V; under every preset: both sets
+        self.assertEqual([(r["cond_text"], r["value"], r["n"], r["meets"]) for r in tg[0]["results"]], [("vdd=1.8 temp=27", 1.0, 2, True)])
+        self.assertEqual(sorted((r["cond_text"], r["meets"]) for r in tg[1]["results"]),
+                         [("vdd=1.2 temp=27", True), ("vdd=1.8 temp=27", True)])
+        # a preset no testbench has: shown, never judged
+        self.assertEqual((tg[2]["preset_known"], tg[2]["results"]), (False, []))
+
+    def test_targets_in_the_selection(self):
+        sel = selmod.build(self.model, [self.dut], [self.tb], self.groups)
+        ids = {c["text"]: c["id"] for c in sel["conds"]}
+        tg = sel["rows"][0]["targets"]
+        self.assertEqual(tg["tb_x.m"], [{"min": None, "max": 1.5, "preset": "nom", "conds": [ids["vdd=1.8 temp=27"]]},
+                                        {"min": 0.5, "max": None, "preset": None, "conds": None}])
+        self.assertEqual(tg["tb_x.q"][0]["conds"], [])
+        self.assertNotIn("targets", selmod.build(Model(synthetic([(R1, "a", 1.0)]), config.Config()), ["ckt_" + "1" * 40],
+                                                 [], repro.build_groups(synthetic([(R1, "a", 1.0)])))["rows"][0])
+
+
+M1, M2, M3 = "evd_" + "d" * 40, "evd_" + "e" * 40, "evd_" + "f" * 40
+
+
+def mc_record(name: str, lib: str, points: int, run: str, seed: int = 12345, simulator: str = "23.1", mean: float = 1.0) -> dict:
+    """A record of the kind mc (B37) of the synthetic circuit and testbench, at the conditions of the
+    synthetic records of the kind sim."""
+    return {"name": name, "prefix": "evd", "present": True, "valid": True, "first": {"library": lib},
+            "locations": [{"library": lib, "path": "evd/x"}],
+            "files": [{"path": "toa.yaml", "size": 1, "sha256": "0" * 64}, {"path": "evidence/samples.csv", "size": 9, "sha256": "f" * 64}],
+            "manifest": {"type": "evd", "kind": "mc", "dut": "ckt_" + "1" * 40, "tbs": ["tb_" + "2" * 40],
+                         "conditions": {"parameters": {"vdd": 1.8},
+                                        "statistics": {"method": "mismatch", "points": points, "sampling": "lds", "seed": seed, "run": run}},
+                         "environment": {"simulator": {"name": "spectre", "version": simulator}},
+                         "metrics": {"tb_x.m": {"n": points, "failed": 0, "mean": mean, "sigma": 0.1, "min": 0.7, "max": 1.3}},
+                         "evidence": [{"path": "evidence/samples.csv", "kind": "table"}]}}
+
+
+class B37(unittest.TestCase):
+    """Monte Carlo simulations: records of the kind mc, their groups and pages, presets with statistics."""
+    def setUp(self):
+        self.idx = with_b36(synthetic([(R1, "a", 1.0)], {"abs": 0.2}))
+        self.idx.objects[R1]["manifest"]["conditions"] = {"parameters": {"vdd": 1.8}, "options": {"temp": 27}}
+        for n, lib, pts, run in ((M1, "a", 200, "batch"), (M2, "b", 10, "each")):
+            self.idx.objects[n] = mc_record(n, lib, pts, run)
+            self.idx.objects[n]["manifest"]["conditions"]["options"] = {"temp": 27}
+        self.idx.objects[M3] = mc_record(M3, "a", 200, "batch", seed=7)
+        self.idx.objects[M3]["manifest"]["conditions"]["options"] = {"temp": 27}
+        self.idx.objects["tb_" + "2" * 40]["manifest"]["presets"]["mc"] = {
+            "parameters": {"vdd": 1.8}, "options": {"temp": 27}, "statistics": {"method": "mismatch", "points": 200, "sampling": "lds", "seed": 12345}}
+        self.model = Model(self.idx, config.Config())
+        self.groups = repro.build_groups(self.idx)
+        self.dut, self.tb = "ckt_" + "1" * 40, "tb_" + "2" * 40
+
+    def group_of(self, name):
+        return next(g for g in self.groups if name in g["records"])
+
+    def test_a_monte_carlo_simulation_is_a_group_of_its_own(self):
+        # the same circuit, testbench and three slots: the sim apart, the two runs of one seed
+        # together (which samples and how may differ), another seed apart
+        self.assertEqual(len(self.groups), 3)
+        sim, mc = self.group_of(R1), self.group_of(M1)
+        self.assertEqual((sim["kind"], sim["records"]), ("sim", [R1]))
+        self.assertEqual((mc["kind"], mc["records"]), ("mc", [M1, M2]))
+        self.assertNotIn(M3, mc["records"])
+        # a group of sim keeps the id it had before B37
+        alone = repro.build_groups(with_b36(synthetic([(R1, "a", 1.0)], {"abs": 0.2})))
+        self.assertNotEqual(alone[0]["id"], mc["id"])
+        self.assertIn("MC mismatch lds seed=12345", mc["cond_text"])
+
+    def test_the_statistics_of_each_record_and_multi_party(self):
+        m = self.group_of(M1)["metrics"][0]
+        self.assertEqual([(x["record"], x["n"], x["mean"]) for x in m["stats"]], [(M1, 200.0, 1.0), (M2, 10.0, 1.0)])
+        # records from two repositories: multi-party; whether they agree is judged on the page
+        self.assertTrue(m["multi_party"])
+        self.assertFalse(m["disagree"])
+        self.assertIsNone(m["agree"])
+
+    def test_conditions_in_one_line(self):
+        c = {"models": [{"file": "a.scs", "section": ["pre", "tt"]}], "parameters": {"vdd": 0.9},
+             "statistics": {"method": "mismatch", "points": 200, "sampling": "lds", "seed": 5, "run": "batch"}}
+        self.assertEqual(repro.conditions_text(c), "pre,tt vdd=0.9 MC mismatch lds seed=5")
+
+    def test_the_page_of_a_record(self):
+        v = self.model.view(M2, {r: g for g in self.groups for r in g["records"]}, {})
+        self.assertTrue(v["known_kind"])
+        self.assertEqual(v["statistics"]["run"], "each")
+        self.assertEqual([(r["name"], r["first"], r["points"], r["run"], r["simulator"], r["samples"]) for r in v["runs"]],
+                         [(M1, 1, 200, "batch", "spectre 23.1", "evidence/samples.csv"), (M2, 1, 10, "each", "spectre 23.1", "evidence/samples.csv")])
+        self.assertEqual(v["runs"][0]["samples_sha256"], "f" * 64)
+        self.assertEqual(v["runs"][0]["stats"]["tb_x.m"]["n"], 200)
+        # the targets of the circuit on its metrics that hold under its conditions (nom: the same three
+        # slots; without a preset: always), held against its samples on the page
+        self.assertEqual([(x["max"], x["min"], x["preset"]) for x in v["targets"]], [(1.5, None, "nom"), (None, 0.5, None)])
+        self.assertEqual([k for k, _ in v["conditions"]], ["parameters", "options", "models", "statistics"])
+
+    def test_a_record_of_a_preset_of_more_samples_is_of_that_preset(self):
+        from gaze import targets
+        pr = self.idx.objects[self.tb]["manifest"]["presets"]["mc"]
+        self.assertEqual(targets.cond_key(self.idx.objects[M2]["manifest"]["conditions"]), targets.cond_key(pr))
+        self.assertNotEqual(targets.cond_key(self.idx.objects[M3]["manifest"]["conditions"]), targets.cond_key(pr))
+        self.assertNotEqual(targets.cond_key(self.idx.objects[R1]["manifest"]["conditions"]), targets.cond_key(pr))
+
+    def test_presets_with_statistics(self):
+        rows = {r["name"]: r for r in self.model.view(self.tb, {}, {})["presets"]}
+        self.assertEqual(rows["mc"]["statistics"], {"method": "mismatch", "points": 200, "sampling": "lds", "seed": 12345})
+        self.assertIsNone(rows["mc"]["other"])
+        self.assertIsNone(rows["nom"]["statistics"])
+
+    def test_the_table_and_the_targets_leave_monte_carlo_out(self):
+        by_dut = {self.dut: [g for g in self.groups if g["dut"] == self.dut]}
+        sel = selmod.build(self.model, [self.dut], [self.tb], by_dut[self.dut])
+        self.assertEqual([c["text"] for c in sel["conds"]], ["vdd=1.8 temp=27"])
+        tg = self.model.view(self.dut, {}, by_dut)["targets"]
+        self.assertEqual({r["group"] for x in tg for r in x["results"]}, {self.group_of(R1)["id"]})
+
+    def test_a_test_plan(self):
+        members = {"groups": [{"group": "", "members": [{"object": IFC_X}, {"object": self.tb}, {"object": self.dut}]}]}
+        plan = self.model.test_plan(members)
+        self.assertEqual(plan["ifcs"], [IFC_X])
+        self.assertEqual(plan["ckts"], [self.dut])
+        self.assertEqual(plan["tbs"][0]["metrics"], ["tb_x.m"])
+        self.assertEqual([(x["name"], x["sets"], x["mc"]) for x in plan["tbs"][0]["presets"]],
+                         [("nom", 1, False), ("low", 2, False), ("odd", 1, False), ("mc", 1, True)])
+        # a frozen library without testbenches is no test plan, nor one that holds records too
+        self.assertIsNone(self.model.test_plan({"groups": [{"group": "", "members": [{"object": IFC_X}]}]}))
+        self.assertIsNone(self.model.test_plan({"groups": [{"group": "", "members": [{"object": IFC_X}, {"object": self.tb}, {"object": R1}]}]}))
+
+    def test_the_other_generations_of_an_interface(self):
+        old = "ifc_" + "4" * 40
+        self.idx.objects[old] = {"name": old, "prefix": "ifc", "present": True, "valid": True, "base_by": [IFC_X],
+                                 "manifest": {"type": "ifc", "name": "x"}, "referenced_by": [{"name": self.tb, "at": "toa.yaml:ifc"}]}
+        self.idx.objects[IFC_X].update(base=[old], history={"generation": 2})
+        self.assertEqual(self.model.ifc_generations(IFC_X), [{"ifc": old, "way": "earlier", "generation": 1, "ckts": 0, "tbs": 1}])
+        self.assertEqual([(x["ifc"], x["way"]) for x in self.model.ifc_generations(old)], [(IFC_X, "later")])
 
 
 class RecordLibrary(unittest.TestCase):
@@ -427,17 +665,30 @@ class Build(unittest.TestCase):
         site = load(out / "data" / "site.json")
         self.assertEqual(site["format"], "gaze-site/1")
         self.assertEqual(site["toa_site"], "")   # the instance of the tests names no site of TOA
+        # the scan time, which the workflow rewrites on every run (scripts/scan.py)
+        self.assertEqual(load(out / "data" / "scan.json"), {"format": "gaze-scan/1", "scanned": "2026-11-23T00:00:00Z",
+                                                             "changed": "2026-11-23T00:00:00Z", "stamp": ""})
         from gaze import fields
         self.assertEqual(site["types"], fields.TYPES)   # the page maps prefixes through this
-        self.assertEqual(site["counts"]["objects"], 11)
+        self.assertEqual(site["counts"]["objects"], 12)
         self.assertEqual([p["display"] for p in site["ifcs"]], ["dyn-latch-cmp", "strongarm-comp"])
         self.assertEqual([c["display"] for c in site["libs"]], ["official.g1"])   # the frozen library of the examples
         self.assertEqual((site["counts"]["ckt"], site["counts"]["evd"], site["counts"]["lib"]), (5, 1, 1))
         self.assertIn('http-equiv="Content-Security-Policy"', (out / "index.html").read_text(encoding="utf-8"))
         shard = load(out / "data" / "ifc" / IFC_SA[4:6] / f"{IFC_SA}.json")
         self.assertEqual(len(shard["ckts"]), 4)
-        self.assertEqual(len(shard["tbs"]), 1)
+        self.assertEqual(len(shard["tbs"]), 2)
         self.assertEqual(len(shard["docs"]), 1)
+        # tb_offset.g2 (B36): official marks it latest, official-chen still marks g1; both marks are shown
+        self.assertEqual([(s["heads"], s["rest"]) for s in shard["series"]["tb"]], [([TB, TB2], [])])
+        tb2 = load(obj_file(out, TB2))
+        self.assertEqual((tb2["socket"], tb2["results"], tb2["probes"]), ("strongarm_comp", "psfascii", []))
+        self.assertEqual([(r["name"], r.get("index"), r.get("count")) for r in tb2["presets"]],
+                         [("nom", None, 1), ("supply", 1, 2), ("supply", 2, 2)])
+        self.assertEqual(tb2["presets"][2]["parameters"], {"vdd": 1.98})
+        # g1 was sealed before B36: no socket, its sweep a list in a parameter, shown as written
+        tb1 = load(obj_file(out, TB))
+        self.assertIsNone(tb1["socket"])
         self.assertEqual(len(shard["groups"]), 1)
         self.assertFalse(shard["groups"][0]["multi_party"])
         self.assertIn([CKT_RAZAVI, CKT_LOWKICK, "verified"], shard["lineage"]["edges"])
@@ -719,12 +970,12 @@ class Authorship(unittest.TestCase):
         out = self.dir / "site"
         with mock.patch("urllib.request.urlopen", urlopen):
             build(self.instance, DATA, out, built="2026-11-23T00:00:00Z")
-            self.assertEqual(len(sent[0]), 11)
+            self.assertEqual(len(sent[0]), 12)
             v = load(obj_file(out, CKT_RAZAVI))
             self.assertEqual(v["swh"], {"known": True, "since": "2026-11-23T00:00:00Z"})
             self.assertEqual(load(obj_file(out, CKT_WRAP1))["swh"], {"known": False, "since": None})
             build(self.instance, DATA, out, built="2026-11-24T00:00:00Z")
-            self.assertEqual(len(sent[1]), 10)                         # what is archived is not asked again
+            self.assertEqual(len(sent[1]), 11)                         # what is archived is not asked again
             self.assertEqual(load(obj_file(out, CKT_RAZAVI))["swh"]["since"], "2026-11-23T00:00:00Z")
             build(self.instance, DATA, out, built="2026-11-25T00:00:00Z", offline=True)
             self.assertEqual(len(sent), 2)                             # offline: not asked, the record kept
@@ -1019,6 +1270,12 @@ class FilesAndDrawings(unittest.TestCase):
         self.assertNotIn("drawing", m.view(IFC_SA, {}, {}))
 
     @unittest.skipUnless(shutil.which("node"), "node is not on PATH")
+    def test_monte_carlo_on_the_page(self):
+        r = subprocess.run([shutil.which("node"), "--test", str(GAZE / "tests" / "mc.test.mjs")],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=GAZE, timeout=120)
+        self.assertEqual(r.returncode, 0, (r.stdout + r.stderr)[-3000:])
+
+    @unittest.skipUnless(shutil.which("node"), "node is not on PATH")
     def test_the_text_given_to_the_viewer(self):
         r = subprocess.run([shutil.which("node"), "--test", str(GAZE / "tests" / "viewer_text.test.mjs")],
                            capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=GAZE, timeout=120)
@@ -1234,7 +1491,7 @@ class FeedsAndAgents(unittest.TestCase):
         lines = [json.loads(x) for x in (out / "registry" / "instance.source.jsonl").read_text(encoding="utf-8").splitlines()]
         self.assertEqual(lines[0], {"toa": "source/1"})
         by = {x["object"]: x for x in lines[1:]}
-        self.assertEqual(len(by), 11)                       # the objects present
+        self.assertEqual(len(by), 12)                       # the objects present
         self.assertNotIn(CKT_LEE1, by)                       # removed
         self.assertEqual([s["git"] for s in by[IFC_SA]["sources"]],
                          ["https://example.org/toa-examples/official.git", "https://example.org/toa-examples/official-chen.git"])
@@ -1320,7 +1577,9 @@ class Selection(unittest.TestCase):
         from gaze import fields
         js = (GAZE / "web" / "assets" / "selection.js").read_text(encoding="utf-8")
         names = {fields.AUTHOR, fields.TITLE, fields.TAGS}
-        for cls in (fields.CKT, fields.SPEC, fields.ROLE, fields.USE, fields.TB, fields.EVD, fields.COND, fields.METRIC, fields.ENV):
+        # (not TARGET: min and max are also the words of the page's own filters)
+        for cls in (fields.CKT, fields.SPEC, fields.ROLE, fields.USE, fields.TB, fields.ANALYZE, fields.EVD, fields.COND,
+                    fields.METRIC, fields.ENV, fields.PROBE):
             names.update(v for k, v in vars(cls).items() if k.isupper() and isinstance(v, str))
         for n in sorted(names):
             with self.subTest(field=n):
@@ -1374,6 +1633,139 @@ class ShippedFiles(unittest.TestCase):
                 # a release archive a workflow downloads comes with its SHA-256
                 for name in re.findall(r'(\w+)_URL: (?:""|https://\S+\.(?:tar\.gz|zip))$', text, re.M):
                     self.assertIn(f"{name}_SHA256:", text)
+
+
+class Scan(unittest.TestCase):
+    """scripts/scan.py, which every run of gaze-pages.yml starts with: it builds in full when anything
+    it would read moved or could not be read, and else publishes the last site with a new scan time."""
+    LIST = "\n".join(json.dumps(d) for d in [
+        {"toa": "source/1"},
+        {"include": "library.source.jsonl", "group": "pll", "branch": "pll", "sources": [{"git": "https://h/a.git"}]},
+        {"include": "library.source.jsonl", "group": "x", "sources": [{"git": "https://h/b.git"}, {"path": "../b"}]},
+        {"name": "not an include line"},
+    ]) + "\nnot json\n"
+    GIT_ONLY = "\n".join(json.dumps(d) for d in [
+        {"toa": "source/1"},
+        {"include": "library.source.jsonl", "group": "pll", "branch": "pll", "sources": [{"git": "https://h/a.git"}]},
+        {"include": "library.source.jsonl", "group": "risca", "branch": "risca", "sources": [{"git": "https://h/a.git"}]},
+    ]) + "\n"
+    ENV = {"GITHUB_SHA": "1" * 40, "TOA_COMMIT": "2" * 40, "TOA_RUST": "1.97.1", "RNL_SHA256": "3" * 64}
+    T0, T1 = "2026-11-25T10:07:00Z", "2026-11-25T10:37:00Z"
+
+    @staticmethod
+    def script():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("gaze_scan", GAZE / "scripts" / "scan.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_the_libraries_of_a_list(self):
+        libs = self.script().libraries(self.LIST)
+        self.assertEqual(libs, [{"group": "pll", "branch": "pll", "sources": ["https://h/a.git"]},
+                                {"group": "x", "branch": "main", "sources": ["https://h/b.git", None]}])
+
+    def test_same_heads_same_stamp(self):
+        sc = self.script()
+        libs = [{"group": "pll", "branch": "pll", "sources": ["https://h/a.git"]},
+                {"group": "x", "branch": "main", "sources": ["https://h/b.git"]}]
+        heads = {("https://h/a.git", "pll"): "a" * 40, ("https://h/b.git", "main"): "b" * 40}
+        one, lines = sc.stamp(libs, self.ENV, lambda u, b: heads[(u, b)])
+        self.assertRegex(one, r"^[0-9a-f]{64}$")
+        self.assertIn("pll https://h/a.git pll " + "a" * 40, lines)
+        self.assertEqual(sc.stamp(libs, dict(self.ENV), lambda u, b: heads[(u, b)])[0], one)
+        # a library that moved, this repository's commit, the tools: each changes it
+        heads[("https://h/b.git", "main")] = "c" * 40
+        self.assertNotEqual(sc.stamp(libs, self.ENV, lambda u, b: heads[(u, b)])[0], one)
+        heads[("https://h/b.git", "main")] = "b" * 40
+        for k in sc.ENVIRONMENT:
+            self.assertNotEqual(sc.stamp(libs, {**self.ENV, k: "9"}, lambda u, b: heads[(u, b)])[0], one, k)
+
+    def test_unknown_gives_no_stamp(self):
+        sc = self.script()
+        libs = sc.libraries(self.LIST)
+        self.assertEqual(sc.stamp(libs[:1], self.ENV, lambda u, b: None)[0], "")   # a host that does not answer
+        self.assertEqual(sc.stamp(libs, self.ENV, lambda u, b: "a" * 40)[0], "")   # a library on this machine only
+        for k in ("GITHUB_SHA", "TOA_COMMIT"):
+            env = {x: v for x, v in self.ENV.items() if x != k}
+            self.assertEqual(sc.stamp(libs[:1], env, lambda u, b: "a" * 40)[0], "", k)
+
+    def test_decide(self):
+        d = self.script().decide
+        prev = {"format": "gaze-scan/1", "scanned": self.T0, "changed": self.T0, "stamp": "s1"}
+        # the same: the last site again, the time of the change kept
+        self.assertEqual(d("s1", prev, True, "schedule"), {"full": False, "changed": self.T0, "why": "nothing changed"})
+        self.assertEqual(d("s1", prev, True, "push")["full"], False)
+        # changed, missing, something not read: in full, the content changed now
+        self.assertEqual(d("s2", prev, True, "schedule"), {"full": True, "changed": "", "why": "something changed"})
+        self.assertEqual(d("s1", None, True, "schedule"), {"full": True, "changed": "", "why": "no stamp of an earlier build"})
+        self.assertEqual(d("s1", {**prev, "stamp": ""}, True, "schedule")["why"], "no stamp of an earlier build")
+        self.assertEqual(d("", prev, True, "schedule"), {"full": True, "changed": "", "why": "something could not be read"})
+        # the same, but in full: the time of the change is kept
+        self.assertEqual(d("s1", prev, True, "workflow_dispatch"), {"full": True, "changed": self.T0, "why": "run by hand"})
+        self.assertEqual(d("s1", prev, False, "schedule"), {"full": True, "changed": self.T0, "why": "the last site is not at hand"})
+        self.assertEqual(d("s1", {**prev, "partial": True}, True, "schedule"),
+                         {"full": True, "changed": self.T0, "why": "the last build could not fetch every library"})
+
+    def run_check(self, sc, site: Path, heads: dict, event="schedule") -> dict:
+        """scan.py check against a site on disk, as the workflow runs it; its outputs."""
+        lst = self.dir / "workspace.source.jsonl"
+        lst.write_bytes(self.GIT_ONLY.encode("utf-8"))
+        out = self.dir / "github_output"
+        out.write_bytes(b"")
+        env = {**self.ENV, "GITHUB_OUTPUT": str(out), "GITHUB_EVENT_NAME": event}
+        with mock.patch.dict(os.environ, env), mock.patch.object(sc, "ls_remote", lambda u, b: heads.get((u, b))), \
+                mock.patch("sys.stdout", new=__import__("io").StringIO()):
+            self.assertEqual(sc.main(["check", str(lst), str(site)]), 0)
+        return dict(line.split("=", 1) for line in out.read_text(encoding="utf-8").splitlines())
+
+    def test_check_against_a_previous_site(self):
+        sc = self.script()
+        self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir, True)
+        site = self.dir / "site"
+        (site / "data").mkdir(parents=True)
+        (site / "index.html").write_bytes(b"<!doctype html>")
+        heads = {("https://h/a.git", "pll"): "a" * 40, ("https://h/a.git", "risca"): "b" * 40}
+        # missing: no scan.json in the last site
+        o = self.run_check(sc, site, heads)
+        self.assertEqual((o["full"], o["changed"], o["why"]), ("true", "", "no stamp of an earlier build"))
+        stamp = o["stamp"]
+        self.assertRegex(stamp, r"^[0-9a-f]{64}$")
+        # the full build writes its scan time; the next run with the same heads builds nothing
+        sc.write_scan(site, stamp, o["changed"], self.T0)
+        o = self.run_check(sc, site, heads)
+        self.assertEqual((o["full"], o["stamp"], o["changed"]), ("false", stamp, self.T0))
+        # and writes only the new scan time
+        self.assertEqual(sc.write_scan(site, o["stamp"], o["changed"], self.T1),
+                         {"format": "gaze-scan/1", "scanned": self.T1, "changed": self.T0, "stamp": stamp})
+        self.assertEqual(sc.read_scan(site)["scanned"], self.T1)
+        # a run by hand builds in full
+        self.assertEqual(self.run_check(sc, site, heads, event="workflow_dispatch")["full"], "true")
+        # changed: risca moved
+        o = self.run_check(sc, site, {**heads, ("https://h/a.git", "risca"): "c" * 40})
+        self.assertEqual((o["full"], o["changed"], o["why"]), ("true", "", "something changed"))
+        # a library that cannot be read: in full, so that the problem shows
+        o = self.run_check(sc, site, {("https://h/a.git", "pll"): "a" * 40})
+        self.assertEqual((o["full"], o["stamp"], o["why"]), ("true", "", "something could not be read"))
+        # a build that could not fetch every library is read again
+        sc.write_scan(site, stamp, self.T0, self.T1, partial=True)
+        self.assertEqual(self.run_check(sc, site, heads)["full"], "true")
+
+    def test_the_workflow(self):
+        wf = (GAZE / ".github" / "workflows" / "gaze-pages.yml").read_text(encoding="utf-8")
+        self.assertIn("run: python3 scripts/scan.py check instance/workspace.source.jsonl .work/site", wf)
+        self.assertIn('python3 scripts/scan.py write .work/site --stamp "$STAMP" --changed "$CHANGED" ${PARTIAL:+--partial}', wf)
+        # the scan time is written on every run, before the cache is kept and the site is uploaded
+        i, j, k = (wf.index("name: The time of this scan"), wf.index("name: Keep the index, site and cache of toa"),
+                   wf.index("actions/upload-pages-artifact"))
+        self.assertLess(i, j)
+        self.assertLess(j, k)
+        self.assertNotIn("if:", wf[i:wf.index("run:", i)])
+        # reading and building, and keeping the cache, only in full
+        for name in ("Read the libraries (toa index)", "Build the site", "Keep the index, site and cache of toa"):
+            step = wf[wf.index(f"name: {name}"):]
+            self.assertIn("if: steps.check.outputs.full == 'true'", step[:step.index("\n      - ")], name)
 
 
 if __name__ == "__main__":

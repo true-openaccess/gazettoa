@@ -5,8 +5,8 @@
   ],
   "address": "https://example.org/toa-examples/official.git",
   "branch": "main",
-  "commit": "1eb83943316b5e309da64b87f852fb66faf506e0",
-  "date": "2026-11-04T09:30:00+08:00",
+  "commit": "230188cc30c9442711f2396ef403bb0902a0b198",
+  "date": "2026-11-24T09:00:00+08:00",
   "previous": null,
   "readable": true,
   "library_yaml": null,
@@ -14,8 +14,9 @@
   "objects": [
     "ckt_876f99c0ddb9fae4aabf6b8b3b7fd59de24e7e2b",
     "ifc_12ad57c51e8f36cac47a4b8a53f2949315f190f5",
-    "lib_cf125e93948ecdee725718e666cf7aa1be126799",
-    "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e"
+    "lib_1b995a48386069233dc1676aa6eaadb03a8dec89",
+    "tb_da7445c069776f4e59f7a9c0ca974ed421b4205e",
+    "tb_efa196442069f2c1171fc3913d0f751a61ce1bd4"
   ],
   "removed": [],
   "problems": []

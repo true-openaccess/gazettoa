@@ -10,6 +10,9 @@ What is written under `<out>/`:
     data/obj/<hh>/<name>.json      one file per object name the index knows, and per name that left
     data/lib/<key>.json            one per library
     data/search.json               every name, for the search
+    data/scan.json                 when the libraries were last scanned and the content last changed;
+                                   both are this build's time here, and gaze-pages.yml rewrites the
+                                   file on each run (scripts/scan.py), even one that builds nothing
     data/changes.json              objects that left a library, with the date the build saw it
     data/seen.json                 when this site first saw each object; kept and added to (authorship.py)
     data/swh.json                  which objects Software Heritage has archived, when asked to check
@@ -346,6 +349,7 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
     data = tmp / "data"
     # one file per name
     names = set(idx.objects) | set(changes_by_name)
+    plans: dict[str, list[str]] = {}  # interface -> the test plans that measure it
     for n in sorted(names):
         v = model.view(n, by_record, by_dut)
         v["changes"] = changes_by_name.get(n, [])
@@ -355,6 +359,12 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
             # a frozen library: its list of members, read from the object and checked by the index
             v["members"] = model.lib_members(object_file(model, tmp, n, LIB.MEMBERS_FILE, toa, instance, offline))
             v["names"].update(model.names(m["object"] for g in v["members"]["groups"] for m in g["members"]))
+            # a frozen library that holds testbenches is a test plan (type lib)
+            v["plan"] = model.test_plan(v["members"])
+            if v["plan"] and v["present"]:
+                v["names"].update(model.names(v["plan"]["ifcs"]))
+                for ifc in v["plan"]["ifcs"]:
+                    plans.setdefault(ifc, []).append(n)
         _dump(data / "obj" / idxmod.shard_of(n) / f"{n}.json", v)
 
     # one shard per interface
@@ -382,6 +392,9 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
         for g in ifc_groups:
             linked.update(g["records"])
             linked.update(g["tbs"])
+        gens = model.ifc_generations(n)
+        linked.update(x["ifc"] for x in gens)
+        linked.update(plans.get(n, []))
         shard = {
             "ifc": ifcv,
             "ckts": [model.card(x) for x in members["ckt"]],
@@ -392,6 +405,9 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
             "groups": ifc_groups,
             "selection": selmod.build(model, members["ckt"], members["tb"], ifc_groups),
             "lineage": {"nodes": nodes, "edges": edges},
+            # the other generations of this interface, each with its own circuits and testbenches
+            "generations": gens,
+            "plans": [model.card(x) for x in plans.get(n, [])],
             "names": model.names(sorted(linked)),
         }
         _dump(data / "ifc" / idxmod.shard_of(n) / f"{n}.json", shard)
@@ -518,6 +534,8 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
         "same_rule": idx.meta.get(INDEX.SAME_FILES) if isinstance(idx.meta.get(INDEX.SAME_FILES), dict) else None,
     }
     _dump(data / "site.json", site)
+    # the format of scripts/scan.py, which the workflow writes the file with
+    _dump(data / "scan.json", {"format": "gaze-scan/1", "scanned": built, "changed": built, "stamp": ""})
 
     if out.exists():
         shutil.rmtree(out)

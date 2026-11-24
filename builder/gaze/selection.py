@@ -7,6 +7,10 @@ sets, the one with the most circuits first): a metric cell is the median of the 
 reproduction groups of that circuit and those conditions hold, with the two labels of the groups,
 multi-party verified and disagree (repro.py). The page shows one set of conditions at a time.
 
+A circuit may have targets on metrics (`specifications.targets`, B36; targets.py): each row lists
+them by metric, with the ids of the sets of conditions each holds under (None: every set), and the
+page shows a target beside the value under the conditions chosen.
+
 By default the page shows the head of each series, the generations a library marks latest or else
 the newest (TOA 3.4, 5.2; views.Model.series_groups), and the others on request.
 
@@ -22,8 +26,9 @@ from __future__ import annotations
 from collections import Counter
 from statistics import median
 
-from .fields import METRIC, TB, metric_full_name
-from .repro import canonical, conditions_text
+from . import targets as tgmod
+from .fields import CKT, EVD, METRIC, TB, metric_full_name
+from .repro import conditions_text
 
 # The fixed columns, in order: `card` is the key of the circuit's card the value comes from; a
 # column `hidden` is left out until the reader chooses it. The kinds: text, number, date, latest (the
@@ -78,6 +83,9 @@ def _cells(metrics: list[dict], gs: list[dict]) -> tuple[dict, dict]:
 
 
 def build(model, ckts: list[str], tbs: list[str], groups: list[dict]) -> dict:
+    # a Monte Carlo simulation gives statistics, not one value: its groups are on the circuit's
+    # page, not in this table (B37)
+    groups = [g for g in groups if g.get("kind") != EVD.MC]
     metrics = metric_columns(model, tbs, groups)
     by_dut: dict[str, list[dict]] = {}
     for g in groups:
@@ -98,7 +106,7 @@ def build(model, ckts: list[str], tbs: list[str], groups: list[dict]) -> dict:
         card = model.card(ckt)
         sets: dict[str, list[dict]] = {}
         for g in by_dut.get(ckt, []):
-            sets.setdefault(canonical(g.get("conditions") or {}), []).append(g)
+            sets.setdefault(tgmod.cond_key(g.get("conditions")), []).append(g)
         conds = {}
         for key, gs in sets.items():
             cid = ids.setdefault(key, f"c{len(ids)}")
@@ -111,6 +119,19 @@ def build(model, ckts: list[str], tbs: list[str], groups: list[dict]) -> dict:
                      # a library of this instance marks a later generation of its series latest (TOA 7.5)
                      "newer": bool(card.get("newer")), "valid": card.get("valid"),
                      "values": {c["key"]: card.get(c["card"]) for c in FIXED}, "conds": conds})
+    # the targets of each circuit, with the sets of conditions (by id) each holds under; a set no
+    # record of this interface was run under has no id, as the page cannot show it
+    for r in rows:
+        m = model.manifest(r["ckt"])
+        tg: dict[str, list] = {}
+        for x in tgmod.targets_of(m):
+            conds_of = None
+            if x["preset"]:
+                keys = tgmod.preset_keys(model, m.get(CKT.IFC), x["metric"], x["preset"])
+                conds_of = sorted(ids[k] for k in keys or () if k in ids)
+            tg.setdefault(x["metric"], []).append({"min": x["min"], "max": x["max"], "preset": x["preset"], "conds": conds_of})
+        if tg:
+            r["targets"] = tg
     order = sorted(count, key=lambda c: (-count[c], texts[c]))
     fixed = [{k: c[k] for k in ("key", "label", "kind", "hidden") if k in c} for c in FIXED]
     return {"columns": fixed + metrics, "rows": rows,

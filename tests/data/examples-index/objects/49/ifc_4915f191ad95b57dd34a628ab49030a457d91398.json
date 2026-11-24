@@ -72,19 +72,19 @@
     {
       "library": "lee",
       "path": "ifc/dyn-latch-cmp/ifc_4915f191ad95b57dd34a628ab49030a457d91398",
-      "first_commit": "93adacf587eb946410b6e916300b3e5605407573",
+      "first_commit": "f91bb62b983d3b6d841df310b874d8d9be0388be",
       "first_date": "2026-11-05T14:00:00Z",
       "first_signature": null,
       "notes": [],
       "stamps": [],
       "source_list": "ifc/dyn-latch-cmp/ifc_4915f191ad95b57dd34a628ab49030a457d91398.source.jsonl",
       "label": "dyn-latch-cmp",
-      "latest": false
+      "latest": true
     }
   ],
   "first": {
     "library": "lee",
-    "commit": "93adacf587eb946410b6e916300b3e5605407573",
+    "commit": "f91bb62b983d3b6d841df310b874d8d9be0388be",
     "date": "2026-11-05T14:00:00Z",
     "signature": null
   },

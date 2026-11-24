@@ -1,11 +1,11 @@
 {
   "toa-index": 2,
-  "name": "lib_cf125e93948ecdee725718e666cf7aa1be126799",
+  "name": "lib_1b995a48386069233dc1676aa6eaadb03a8dec89",
   "prefix": "lib",
   "present": true,
   "valid": true,
   "problems": [],
-  "sha256": "16aa129510b763c26920a9c43a7072753b9e318f59f8191d775c1309f5bfda2a",
+  "sha256": "c2db691aa18e4e25d496053eaf691cb81a08a6f3f18ebeed3e829c01f3d48ca7",
   "manifest": {
     "type": "lib",
     "license": "CC0-1.0",
@@ -47,8 +47,8 @@
     {
       "path": "members.source.jsonl",
       "size": 1016,
-      "blob": "bc3bcc8b5df9080196da100ee18652486adf51b2",
-      "sha256": "b1b3ea33c8441da9fe53dd753563d0bdb1024fd68cb54419d454c549d0cc8d05"
+      "blob": "291a7d1908c5a4a92a3480c6a99606fa33b03f12",
+      "sha256": "ae283834cf0d41f496ca2f9a9aed300ddf84f3b8fc01b3427cd27a341f502893"
     },
     {
       "path": "toa.yaml",
@@ -60,32 +60,32 @@
   "locations": [
     {
       "library": "official",
-      "path": "lib/official.g1/lib_cf125e93948ecdee725718e666cf7aa1be126799",
-      "first_commit": "a41ff0458ad9beadbb0a9b3609aad09fdb6e5eed",
+      "path": "lib/official.g1/lib_1b995a48386069233dc1676aa6eaadb03a8dec89",
+      "first_commit": "bb4d472ebd9f588b1e62716f649f5cee523002eb",
       "first_date": "2026-11-04T09:00:00+08:00",
       "first_signature": null,
       "notes": [],
       "stamps": [],
-      "source_list": "lib/official.g1/lib_cf125e93948ecdee725718e666cf7aa1be126799.source.jsonl",
+      "source_list": "lib/official.g1/lib_1b995a48386069233dc1676aa6eaadb03a8dec89.source.jsonl",
       "label": "official.g1",
       "latest": true
     },
     {
       "library": "official-chen",
-      "path": "lib/official.g1/lib_cf125e93948ecdee725718e666cf7aa1be126799",
-      "first_commit": "a41ff0458ad9beadbb0a9b3609aad09fdb6e5eed",
+      "path": "lib/official.g1/lib_1b995a48386069233dc1676aa6eaadb03a8dec89",
+      "first_commit": "bb4d472ebd9f588b1e62716f649f5cee523002eb",
       "first_date": "2026-11-04T09:00:00+08:00",
       "first_signature": null,
       "notes": [],
       "stamps": [],
-      "source_list": "lib/official.g1/lib_cf125e93948ecdee725718e666cf7aa1be126799.source.jsonl",
+      "source_list": "lib/official.g1/lib_1b995a48386069233dc1676aa6eaadb03a8dec89.source.jsonl",
       "label": "official.g1",
       "latest": true
     }
   ],
   "first": {
     "library": "official",
-    "commit": "a41ff0458ad9beadbb0a9b3609aad09fdb6e5eed",
+    "commit": "bb4d472ebd9f588b1e62716f649f5cee523002eb",
     "date": "2026-11-04T09:00:00+08:00",
     "signature": null
   },
