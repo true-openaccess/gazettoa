@@ -30,6 +30,23 @@ It takes no submissions and keeps no record of its own. When a library removes a
 drops it at the next build and notes that it left; a removal record the library wrote is shown as
 the library wrote it.
 
+## Screenshots
+
+The home page of this instance, and the symbols of its interfaces:
+
+![The home page](docs/screenshots/home.png)
+
+![The symbols of the interfaces](docs/screenshots/symbols.png)
+
+An interface of the demo library (`scripts/demo/`): its symbol and pins, and one table of its
+circuits with what their evidence records measured:
+
+![An interface and its implementations](docs/screenshots/interface.png)
+
+A circuit, its schematic drawn by the RNL viewer from the netlist:
+
+![A circuit and its schematic](docs/screenshots/circuit.png)
+
 ## What is here
 
 | Path | What |
