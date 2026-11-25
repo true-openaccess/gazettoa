@@ -139,10 +139,12 @@ function signatureLong(sig, lib) {
 const STAMP_KIND = { opentimestamps: "OpenTimestamps", rfc3161: "RFC 3161" };
 
 /** Where to read how to stamp an object: the page on the site of TOA the instance names
- *  (gaze.yaml, toa_site), else OpenTimestamps itself. */
+ *  (gaze.yaml, toa_site), in the page's language (the site of TOA keeps each language in a folder
+ *  of its own, en/ and zh/), else OpenTimestamps itself. */
 function stampHow() {
   const toa = (S.site && S.site.toa_site) || "";
-  if (/^https?:\/\//.test(toa)) return `<a href="${esc(toa.replace(/\/*$/, "/"))}tools.html#timestamps" target="_blank" rel="noopener noreferrer">${esc(t("See how on the site of TOA"))} ↗</a>`;
+  const lang = S.lang === "zh" ? "zh" : "en";
+  if (/^https?:\/\//.test(toa)) return `<a href="${esc(toa.replace(/\/*$/, "/"))}${lang}/tools.html#timestamps" target="_blank" rel="noopener noreferrer">${esc(t("See how on the site of TOA"))} ↗</a>`;
   return `<a href="https://opentimestamps.org/" target="_blank" rel="noopener noreferrer">opentimestamps.org ↗</a>`;
 }
 
