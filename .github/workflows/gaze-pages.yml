@@ -47,7 +47,7 @@ env:
   # executable is kept in the Actions cache under the commit and the Rust version, so each is built
   # once. Until TOA_COMMIT is set, the build stops at the step that builds toa.
   TOA_REPO: https://github.com/true-openaccess/toa
-  TOA_COMMIT: "d35501cc77524bcb19740cdd2926045d0c9f0207"
+  TOA_COMMIT: "0a7d52180fa86bd30b44a6135c24dfe80303f7bb"
   TOA_RUST: "1.97.1"
   TOA_BIN: ${{ github.workspace }}/.toa-bin
   # The RNL command, to draw the symbols of interfaces: a core release, pinned by SHA-256.
@@ -69,9 +69,8 @@ jobs:
           key: gaze-${{ github.run_id }}
           restore-keys: gaze-
       # The site keeps records from build to build: when it first saw each object (seen.json, for
-      # the evidence of time of decision B35), objects that left a library (changes.json), what
-      # Software Heritage has archived (swh.json) and what GitHub said of signed commits
-      # (signatures.json). When the cache is gone they are taken back from the site as published,
+      # the evidence of time of decision B35), objects that left a library (changes.json) and what
+      # GitHub said of signed commits (signatures.json). When the cache is gone they are taken back from the site as published,
       # or the record of when each object was first seen would start again.
       # A site never published (404) starts its records now; any other failure stops the build.
       - name: When the cache is gone, take the records back from the published site
@@ -80,7 +79,7 @@ jobs:
         run: |
           if [ -f .work/site/data/site.json ] || [ -z "$SITE_URL" ]; then exit 0; fi
           mkdir -p .work/site/data
-          for f in site.json search.json changes.json seen.json swh.json signatures.json scan.json; do
+          for f in site.json search.json changes.json seen.json signatures.json scan.json; do
             code=$(curl -sS -L -o ".work/site/data/$f" -w '%{http_code}' "${SITE_URL%/}/data/$f" || echo 000)
             case "$code" in
               200) ;;

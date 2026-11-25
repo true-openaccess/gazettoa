@@ -2,7 +2,7 @@
 // with files fetched from the object's library (or the site's copy).
 import {
   S, t, esc, getJSON, objUrl, ifcUrl, libUrl, rawUrl, prefixOf, short, fmtDate, fmtCommit, fmtNum, fmtTime, scanTimes, yamlish,
-  typeName, TYPE_PLURAL, TYPE_ORDER, nameLink, nameChip, linkChip, libLink, libLinks, st, tag, helpBtn, dash, validMark,
+  NAME_RE, typeName, TYPE_PLURAL, TYPE_ORDER, nameLink, nameChip, linkChip, libLink, libLinks, st, tag, helpBtn, dash, validMark,
   panel, bodyDiv, emptyBody, table, kv, fold, pre, renderMd, register, feedLink, latestMark, LATEST_HELP,
 } from "./core.js";
 import { runText } from "./mc.js";
@@ -95,7 +95,6 @@ function sourcesPanel(v) {
 /** A translated sentence whose one slot, written "\u0001", is filled by HTML (a link): the text is escaped, the slot is not. */
 const SLOT = "\u0001";
 const withSlot = (text, html) => esc(text).replace(SLOT, html);
-const SWH = "https://archive.softwareheritage.org/";
 /** A translated sentence with named slots, {pr} and the like, filled by HTML after the text is escaped. */
 const withSlots = (text, html) => Object.entries(html).reduce((s, [k, h]) => s.split(`{${k}}`).join(h), esc(text));
 
@@ -134,12 +133,23 @@ function signatureLong(sig, lib) {
   return esc(why);
 }
 
-/* Timestamp proofs beside the copies of an object (TOA 4.3): the index lists them, this site checks none. */
+/* Timestamp proofs beside the copies of an object (TOA 4.3): the index lists whatever the stamps
+   directory holds, and this site checks none. TOA does not say which kinds a library keeps; the
+   kind is a hint from the extension, and OpenTimestamps is only suggested (decision of 11-25). */
 const STAMP_KIND = { opentimestamps: "OpenTimestamps", rfc3161: "RFC 3161" };
+
+/** Where to read how to stamp an object: the page on the site of TOA the instance names
+ *  (gaze.yaml, toa_site), else OpenTimestamps itself. */
+function stampHow() {
+  const toa = (S.site && S.site.toa_site) || "";
+  if (/^https?:\/\//.test(toa)) return `<a href="${esc(toa.replace(/\/*$/, "/"))}tools.html#timestamps" target="_blank" rel="noopener noreferrer">${esc(t("See how on the site of TOA"))} ↗</a>`;
+  return `<a href="https://opentimestamps.org/" target="_blank" rel="noopener noreferrer">opentimestamps.org ↗</a>`;
+}
 
 function stampsLong(v) {
   if (!v.stamps.length) {
-    return `${esc(t("no proofs"))} <span class="faint">${withSlot(t("a library may keep beside the object, in {dir}, proofs from third parties that its name existed at a time (TOA 4.3)", { dir: SLOT }), `<code>${esc(v.name)}.stamps/</code>`)}</span>`;
+    const advice = withSlots(t("You can stamp the object name with OpenTimestamps: it is free, sends out only a hash, and the proof is completed a few hours later. The proof goes beside the object, in {dir}; any other kind of proof will do as well. {link}"), { dir: `<code>${esc(v.name)}.stamps/</code>`, link: stampHow() });
+    return `${esc(t("no proofs"))} <span class="faint">${advice}</span>`;
   }
   const items = v.stamps.map(s => {
     const places = s.places.map(p => {
@@ -176,14 +186,8 @@ function timePanel(v) {
     rows.push([esc(t("First commit")), `${esc(fmtDate(v.first.date))} <span class="faint">${withSlot(t("in {lib}, at commit {commit}; the date is written by the committer", { lib: SLOT, commit: fmtCommit(v.first.commit) }), libLink(v.first.library))}</span>`]);
     if (v.first_signature) rows.push([esc(t("Signature")), signatureLong(v.first_signature, v.first.library)]);
   }
-  if (v.swhid) {
-    const known = v.swh ? (v.swh.known
-      ? " " + st("multi", t("archived"), t("Software Heritage has this directory; this site first found it there on {date}", { date: fmtDate(v.swh.since) }))
-      : ` ${st("none", t("not archived yet"))} <a href="${SWH}save/" target="_blank" rel="noopener noreferrer">${esc(t("ask Software Heritage to archive the library"))} ↗</a>`) : "";
-    rows.push([esc(t("Software Heritage")), `<a class="mono" href="${SWH}${esc(v.swhid)}" target="_blank" rel="noopener noreferrer">${esc(v.swhid.slice(0, 22))}… ↗</a>${known}`]);
-  }
   if (v.stamps) rows.push([esc(t("Timestamp proofs")), stampsLong(v)]);
-  const help = esc(t("The site gives evidence, not a verdict: TOA does not decide who may sign a work. The date this site first saw an object is this site's own record. The date of a commit is written by whoever commits. Software Heritage archives public repositories on its own, so its record is a third party's: the hash of an object name is the hash of that directory there (TOA chapter 11). A signed commit shows who put the object into a library, not who wrote it: the index gives only the format of the signature, and for a library on github.com this site asks GitHub whether it verified and for which account (TOA 6.3, 8.3). A timestamp proof beside the object shows that its name existed at the time the proof gives, as far as the service that made it is trusted; the time is in the proof, not in the date of the commit that added it, and this site does not check it (TOA 4.3)."));
+  const help = esc(t("The site gives evidence, not a verdict: TOA does not decide who may sign a work. The date this site first saw an object is this site's own record. The date of a commit is written by whoever commits. A signed commit shows who put the object into a library, not who wrote it: the index gives only the format of the signature, and for a library on github.com this site asks GitHub whether it verified and for which account (TOA 6.3, 8.3). A timestamp proof beside the object shows that its name existed at the time the proof gives, as far as the service that made it is trusted; the time is in the proof, not in the date of the commit that added it, and this site does not check it (TOA 4.3). Any kind of proof may be kept there; OpenTimestamps is only a suggestion."));
   return panel(esc(t("Authorship and time")) + " " + helpBtn(help), bodyDiv(kv(rows)));
 }
 
@@ -588,13 +592,26 @@ export async function pageObject(name) {
   return genericPage(v, names);
 }
 
-function unknownName(name) {
-  return { title: short(name), html: `${crumb([])}<h1 class="mono">${esc(name)}</h1><div class="notice-warn"><b>${esc(t("Not known to this instance"))}</b><p>${esc(t("No library of this instance holds an object of this name, and no object here refers to it. With toa, `toa fetch NAME` looks for it in the libraries you use."))}</p></div>` };
+/* Software Heritage archives public repositories; the hash of an object name is the hash of a
+   directory there, swh:1:dir:<hash> (TOA chapter 11). The site links to it only for an object it
+   does not have (decision of 11-25), and does not ask Software Heritage what it holds. */
+const SWH = "https://archive.softwareheritage.org/";
+
+/** Where to look for an object this site does not have; only a well-formed name has a directory. */
+function lookInSwh(name) {
+  if (!NAME_RE.test(name)) return "";
+  const link = `<a href="${SWH}swh:1:dir:${esc(name.split("_")[1])}/" target="_blank" rel="noopener noreferrer">${esc(t("look for it in Software Heritage"))} ↗</a>`;
+  return `<p>${withSlot(t("Software Heritage archives public repositories, and the hash of an object name is the identifier of its directory there (TOA chapter 11): {link}", { link: SLOT }), link)}</p>`;
 }
 
+function unknownName(name) {
+  return { title: short(name), html: `${crumb([])}<h1 class="mono">${esc(name)}</h1><div class="notice-warn"><b>${esc(t("Not known to this instance"))}</b><p>${esc(t("No library of this instance holds an object of this name, and no object here refers to it. With toa, `toa fetch NAME` looks for it in the libraries you use."))}</p>${lookInSwh(name)}</div>` };
+}
+
+/** A name objects here refer to, or that a library removed: not here either, so the same link. */
 function absentPage(v, names) {
   const head = objHead(v, { crumbs: ifcCrumb(v, names) });
-  const note = `<div class="notice-warn"><b>${esc(t("Not in the libraries of this instance"))}</b><p>${esc(t("Objects here refer to this name, or a library removed it. The removal records below are the libraries' own."))}</p></div>`;
+  const note = `<div class="notice-warn"><b>${esc(t("Not in the libraries of this instance"))}</b><p>${esc(t("Objects here refer to this name, or a library removed it. The removal records below are the libraries' own."))}</p>${lookInSwh(v.name)}</div>`;
   return { title: v.display, html: head + note + removalsPanel(v) + lineagePanel(v, names) + refByPanel(v, names) };
 }
 

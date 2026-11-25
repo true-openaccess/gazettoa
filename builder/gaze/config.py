@@ -164,7 +164,6 @@ class Config:
     hosts: dict[str, dict[str, str]] = field(default_factory=lambda: {k: dict(v) for k, v in DEFAULT_HOSTS.items()})
     libraries: dict[str, dict] = field(default_factory=dict)
     repository: str = ""          # where this instance's own code lives, for the footer; from Actions
-    software_heritage_check: bool = False   # ask Software Heritage which objects it has archived (B35)
     # ask GitHub whether the signed commits of libraries on github.com verified, and by whom (B35);
     # only with a token in GITHUB_TOKEN, as an Actions job has, and not offline
     github_signature_check: bool = True
@@ -197,7 +196,7 @@ def load(instance: Path, site_url: str | None = None) -> Config:
         data = parse_yaml_subset(path.read_text(encoding="utf-8"), str(path.name))
         cfg.source = path
         known = {"schema", "title", "description", "site_url", "viewer_url", "toa_site", "hosts", "libraries",
-                 "software_heritage_check", "github_signature_check"}
+                 "github_signature_check"}
         for k in data:
             if k not in known:
                 raise ConfigError(f"{CONFIG_FILE}: unknown key {k!r}; known: {', '.join(sorted(known))}")
@@ -211,11 +210,10 @@ def load(instance: Path, site_url: str | None = None) -> Config:
         # a link on the home page: an address on the web, never a script
         if cfg.toa_site and not re.match(r"^https?://[^\s\"'<>]+$", cfg.toa_site):
             raise ConfigError(f"{CONFIG_FILE}: toa_site is an address that starts with https://, not {cfg.toa_site!r}")
-        for k in ("software_heritage_check", "github_signature_check"):
-            if data.get(k) is not None:
-                if not isinstance(data[k], bool):
-                    raise ConfigError(f"{CONFIG_FILE}: {k} is true or false")
-                setattr(cfg, k, data[k])
+        if data.get("github_signature_check") is not None:
+            if not isinstance(data["github_signature_check"], bool):
+                raise ConfigError(f"{CONFIG_FILE}: github_signature_check is true or false")
+            cfg.github_signature_check = data["github_signature_check"]
         for host, spec in (data.get("hosts") or {}).items():
             if not isinstance(spec, dict) or not all(isinstance(v, str) for v in spec.values()):
                 raise ConfigError(f"{CONFIG_FILE}: hosts.{host} maps raw and web to address templates")

@@ -31,6 +31,7 @@ from gaze import selection as selmod  # noqa: E402
 from gaze import symbols as symmod  # noqa: E402
 from gaze.build import build  # noqa: E402
 from gaze.index import Index, IndexError_, read  # noqa: E402
+from gaze import views  # noqa: E402
 from gaze.views import Model  # noqa: E402
 
 DATA = GAZE / "tests" / "data" / "examples-index"
@@ -865,7 +866,7 @@ def with_copy(src: Path, dst: Path, *, of: str = CKT_RAZAVI, author: str | None 
 
 
 class Authorship(unittest.TestCase):
-    """Evidence of authorship and time (decision B35): first seen, Software Heritage, same files."""
+    """Evidence of authorship and time (decision B35): first seen, same files."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -942,52 +943,26 @@ class Authorship(unittest.TestCase):
         self.assertEqual(seen2["objects"][COPY], {"seen": "2026-12-01T00:00:00Z", "library": "alice", "commit": alice["commit"]})
         v = load(obj_file(out, COPY))
         self.assertEqual(v["seen"]["seen"], "2026-12-01T00:00:00Z")
-        self.assertEqual(v["swhid"], "swh:1:dir:" + "c" * 40)
-        self.assertIsNone(v["swh"])                                  # not asked: off by default
 
-    def test_software_heritage_is_asked_only_when_set(self):
-        (self.instance / "gaze.yaml").write_bytes(b"software_heritage_check: true\n")
-        sent = []
-
-        class Resp:
-            def __init__(self, body):
-                self.body = body
-
-            def read(self):
-                return self.body
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *a):
-                return False
-
+    def test_software_heritage_is_not_asked(self):
+        # the user's decision of 11-25: no row of Software Heritage on the object page, so the build
+        # asks it nothing and keeps no record of it; the page links to it only for a name it lacks
         def urlopen(req, timeout=None):
-            asked = json.loads(req.data)
-            sent.append(asked)
-            return Resp(json.dumps({s: {"known": s.endswith(CKT_RAZAVI[4:])} for s in asked}).encode())
+            raise AssertionError(f"the build asked {getattr(req, 'full_url', req)}")
 
         out = self.dir / "site"
         with mock.patch("urllib.request.urlopen", urlopen):
             build(self.instance, DATA, out, built="2026-11-23T00:00:00Z")
-            self.assertEqual(len(sent[0]), 12)
-            v = load(obj_file(out, CKT_RAZAVI))
-            self.assertEqual(v["swh"], {"known": True, "since": "2026-11-23T00:00:00Z"})
-            self.assertEqual(load(obj_file(out, CKT_WRAP1))["swh"], {"known": False, "since": None})
-            build(self.instance, DATA, out, built="2026-11-24T00:00:00Z")
-            self.assertEqual(len(sent[1]), 11)                         # what is archived is not asked again
-            self.assertEqual(load(obj_file(out, CKT_RAZAVI))["swh"]["since"], "2026-11-23T00:00:00Z")
-            build(self.instance, DATA, out, built="2026-11-25T00:00:00Z", offline=True)
-            self.assertEqual(len(sent), 2)                             # offline: not asked, the record kept
-            self.assertTrue(load(obj_file(out, CKT_RAZAVI))["swh"]["known"])
-        self.assertTrue(load(out / "data" / "site.json")["swh_check"])
-
-    def test_the_setting_is_true_or_false(self):
-        (self.instance / "gaze.yaml").write_bytes(b"software_heritage_check: yes\n")
-        with self.assertRaises(config.ConfigError):
+        v = load(obj_file(out, CKT_RAZAVI))
+        self.assertNotIn("swhid", v)
+        self.assertNotIn("swh", v)
+        self.assertFalse((out / "data" / "swh.json").exists())
+        self.assertNotIn("swh_check", load(out / "data" / "site.json"))
+        # the setting is gone: an instance that still sets it is told so
+        (self.instance / "gaze.yaml").write_bytes(b"software_heritage_check: true\n")
+        with self.assertRaisesRegex(config.ConfigError, "unknown key 'software_heritage_check'"):
             config.load(self.instance)
-        self.assertFalse(config.Config().software_heritage_check)
-
+        self.assertFalse(hasattr(config.Config(), "software_heritage_check"))
 
 def with_signature(src: Path, dst: Path, *, kind: str | None = "ssh",
                    address: str = "https://github.com/someone/official.git") -> str:
@@ -1227,6 +1202,32 @@ class Stamps(unittest.TestCase):
         p = Model(idx, config.Config()).view(CKT_RAZAVI, {}, {})["stamps"][0]["places"][0]
         self.assertTrue(p["raw"].startswith("https://codeberg.org/someone/"))
         self.assertTrue(p["raw"].endswith(".stamps/20261124-btc.ots"))
+
+    def test_any_file_of_the_directory_is_listed(self):
+        # TOA does not say what the directory holds (decision of 11-25): files in subdirectories, any
+        # extension; the kind is a hint from the extension, guessed here when the index gives none
+        idx = read(DATA)
+        added = {"commit": "1" * 40, "date": "2026-11-25T00:00:00Z"}
+        self.stamped(idx, {"official": [
+            {"file": "anchored/20261125-btc.OTS", "size": 2000, **added},
+            {"file": "notes on it #1.txt", "kind": "other", "size": 10, **added},
+            {"file": "tsa/a.tsr", "kind": None, "size": 900, **added},
+            {"file": "../outside.ots", "size": 1, **added},
+            {"file": "a//b.ots", "size": 1, **added},
+            {"file": "/abs.ots", "size": 1, **added},
+        ]})
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "official").mkdir()
+            s = Model(idx, config.Config(), local_files=[Path(tmp)]).view(CKT_RAZAVI, {}, {})["stamps"]
+        self.assertEqual([(x["file"], x["kind"]) for x in s], [("anchored/20261125-btc.OTS", "opentimestamps"),
+                                                                ("notes on it #1.txt", "other"), ("tsa/a.tsr", "rfc3161")])
+        path = idx.get(CKT_RAZAVI)["locations"][0]["path"]
+        self.assertEqual([x["places"][0]["raw"] for x in s], [
+            f"local/official/{path}.stamps/anchored/20261125-btc.OTS",
+            f"local/official/{path}.stamps/notes%20on%20it%20%231.txt",
+            f"local/official/{path}.stamps/tsa/a.tsr"])
+        self.assertEqual([views.stamp_kind(f) for f in ("x.ots", "d.e/x", "x", "x.tsr", "x.p7s")],
+                         ["opentimestamps", "other", "other", "rfc3161", "other"])
 
     def test_an_index_without_the_key_says_nothing_of_stamps(self):
         idx = read(DATA)

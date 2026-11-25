@@ -167,8 +167,8 @@ the site's address comes from GitHub Pages, so a fork runs it unchanged.
   minutes, so a time can be that late.
 - Each run keeps the index, the site and toa's cache in the Actions cache, so only what changed is
   read again. When the cache is gone, the records the site keeps from build to build (when it
-  first saw each object, objects that left a library, what Software Heritage archived, what GitHub
-  said of signed commits) are taken back from the published site.
+  first saw each object, objects that left a library, what GitHub said of signed commits) are
+  taken back from the published site.
 
 ## What the build writes
 
@@ -196,8 +196,9 @@ against the circuit's targets, and compares the runs of one simulation sample by
 their statistics; a frozen library of an interface and its testbenches is shown as a test plan.
 It reads format 2 of the index of `toa`,
 and shows the evidence of authorship and time that the index gives: when this site first saw an
-object, objects with the same files, signed commits, timestamp proofs and Software Heritage (TOA
-4.3, 6.3, 8.3 and chapter 11). Every page says that it is a preview.
+object, objects with the same files, signed commits and timestamp proofs (TOA 4.3, 6.3 and 8.3).
+For a well-formed object name it does not hold, it links to the directory of that hash in Software
+Heritage (TOA chapter 11), where it may be archived. Every page says that it is a preview.
 
 ## License
 

@@ -13,7 +13,6 @@ toa_site: https://true-openaccess.github.io/toa/
 #   git.example.org:
 #     raw: "https://git.example.org/{repo}/raw/{commit}/{path}"
 #     web: "https://git.example.org/{repo}/tree/{commit}/{path}"
-# software_heritage_check: true   # ask Software Heritage which objects it has archived (off by default)
 # github_signature_check: false   # do not ask GitHub whether signed commits verified (asked by
 #   default when the build has a token in GITHUB_TOKEN, as in GitHub Actions)
 # libraries: per library, by its key (the group of its include line)

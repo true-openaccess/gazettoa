@@ -15,7 +15,6 @@ What is written under `<out>/`:
                                    file on each run (scripts/scan.py), even one that builds nothing
     data/changes.json              objects that left a library, with the date the build saw it
     data/seen.json                 when this site first saw each object; kept and added to (authorship.py)
-    data/swh.json                  which objects Software Heritage has archived, when asked to check
     data/signatures.json           what GitHub says of the signed commits of libraries on github.com
     sym/<hh>/<name>.svg            the symbol of each interface (symbols.py)
     feeds/, llms.txt, registry/    Atom feeds, the text for agents, the instance as a source list (feeds.py)
@@ -27,7 +26,7 @@ form, or `raw: copy` in gaze.yaml), and copies what an earlier build already cop
 fetching it again. It reads two kinds of files itself, checked against the index: the symbols of
 interfaces, and the lists of members of frozen libraries.
 
-The records kept from build to build (changes.json, seen.json, swh.json, signatures.json) are read from the
+The records kept from build to build (changes.json, seen.json, signatures.json) are read from the
 previous site: --prev, or the output directory itself. A workflow whose cache was cleared takes
 them back from the published site first (gaze-pages.yml), or the record of when each object was
 first seen would start again.
@@ -317,14 +316,6 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
     # evidence of authorship and time (TOA decision B35)
     seen = authmod.update_seen(model, _read_json(prev / "data" / "seen.json") if prev else None, built)
     model.seen = seen["objects"]
-    swh = None
-    if cfg.software_heritage_check:
-        prev_swh = _read_json(prev / "data" / "swh.json") if prev else None
-        if offline:
-            swh = prev_swh if isinstance(prev_swh, dict) and isinstance(prev_swh.get("known"), dict) else None
-        else:
-            swh = authmod.swh_known([n for n, o in idx.objects.items() if o.get("present")], prev_swh, built, _log)
-        model.swh = (swh or {}).get("known")
     # who signed the commits that put objects into libraries on github.com, as GitHub verified it
     prev_sig = _read_json(prev / "data" / "signatures.json") if prev else None
     token = os.environ.get("GITHUB_TOKEN", "")
@@ -485,8 +476,6 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
     recent.sort(key=lambda r: (-date_key(r["date"]), r["name"], r["library"]))
     _dump(data / "changes.json", changes)
     _dump(data / "seen.json", seen)
-    if swh:
-        _dump(data / "swh.json", swh)
     if sigs["commits"] or prev_sig:
         _dump(data / "signatures.json", sigs)
 
@@ -525,9 +514,8 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
         "libs": lib_cards,
         "recent": recent[:RECENT],
         "changes": changes[:20],
-        # since when this site records when it first saw each object; whether it asks Software Heritage
+        # since when this site records when it first saw each object
         "seen_since": seen["since"],
-        "swh_check": bool(cfg.software_heritage_check),
         # whether it asks GitHub about signed commits: set, and this build had a token and was online
         "sig_check": bool(cfg.github_signature_check and not offline and os.environ.get("GITHUB_TOKEN")),
         # the numbers the index used for the same files of 8.3 (min_size, common_groups, ...), for the help

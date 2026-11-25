@@ -55,9 +55,10 @@ class INDEX:
     # when not signed, unverified (6.3, 8.3); in `first` the same of the earliest commit is `signature`
     FIRST_SIGNATURE = "first_signature"
     SIGNATURE = "signature"
-    # on a place: the timestamp proofs in <object name>.stamps/ beside it (4.3), each with `file`,
-    # `kind` (opentimestamps, rfc3161, other), `size` and the `commit` and `date` that first added it;
-    # not checked by the index
+    # on a place: the timestamp proofs in <object name>.stamps/ beside it (4.3), each with `file` (its
+    # path in the directory, which may hold `/`), `kind` (opentimestamps, rfc3161, other: only a hint
+    # from the extension), `size` and the `commit` and `date` that first added it; not checked by the
+    # index. TOA does not say what the directory holds.
     STAMPS = "stamps"
     STAMPS_DIR = ".stamps"      # the suffix of the stamps directory beside an object (4.3)
     # on an object: the same files without a declared lineage (8.3), computed by the index:

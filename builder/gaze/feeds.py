@@ -231,7 +231,7 @@ All JSON, UTF-8, made by the build from the index of the reference tool `toa`:
 - `data/obj/<first two hex digits>/<name>.json`: one object: its manifest as the index read it, its
   files with SHA-256, where it is published, which libraries mark it latest, lineage, who refers
   to it, removals; for a frozen library, its list of members. Also the evidence of authorship and
-  time: `seen` (when this site first saw it), `swhid` (its directory in Software Heritage),
+  time: `seen` (when this site first saw it),
   `same_files` (files byte for byte the same as in an earlier object of another author that is
   not related to it, by the rule of TOA 8.3, as the index of toa computed them, `same_files` of
   its index format: a notice, not a verdict), and `first_signature` and
@@ -239,8 +239,9 @@ All JSON, UTF-8, made by the build from the index of the reference tool `toa`:
   x509, other; null when not signed) and, for a library on github.com, what GitHub said (`check`:
   `verified`, `reason`, `signer`; `web_flow` with the `pulls` it merged when GitHub signed it
   itself). A signature shows who put an object into a library, not who wrote it. `stamps`: the
-  timestamp proofs beside its copies (TOA 4.3), each with `file`, `kind` (opentimestamps, rfc3161,
-  other), `size` and the `places` that hold it (library, the commit that first added it, its date,
+  timestamp proofs beside its copies (TOA 4.3), each with `file` (its path in the stamps directory),
+  `kind` (opentimestamps, rfc3161 or other, a hint from the extension), `size` and the `places` that
+  hold it (library, the commit that first added it, its date,
   where to fetch it); null when the index does not list them. They are not checked here
 - `data/ifc/<first two hex digits>/<name>.json`: one interface with its circuits, testbenches,
   documents, their series, reproduction groups and lineage

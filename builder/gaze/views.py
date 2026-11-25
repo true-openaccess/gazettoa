@@ -97,14 +97,14 @@ def date_key(s: str | None) -> float:
     return d.timestamp() if d else 0.0
 
 
-_HASH40 = re.compile(r"^[0-9a-f]{40}$")
+# the kinds of timestamp proofs the page knows how to check, by extension; any other is "other"
+STAMP_KINDS = {".ots": "opentimestamps", ".tsr": "rfc3161"}
 
 
-def swhid(name: str) -> str | None:
-    """The identifier in Software Heritage of the directory an object name names: the hash of an
-    object name is the hash of that directory (TOA chapter 11; decision B35)."""
-    h = name.split("_", 1)[1] if "_" in name else ""
-    return f"swh:1:dir:{h}" if _HASH40.match(h) else None
+def stamp_kind(file: str) -> str:
+    """The kind of a timestamp proof as a hint from its extension, as the index of toa gives it."""
+    name = file.rsplit("/", 1)[-1]
+    return STAMP_KINDS.get(name[name.rfind("."):].lower(), "other") if "." in name else "other"
 
 
 def prefix_of(name: str) -> str:
@@ -162,7 +162,6 @@ class Model:
             s = o.get(INDEX.SAME_FILES)
             if isinstance(s, dict) and (s.get("earlier") or s.get("later") or s.get("common")):
                 self.same[n] = s
-        self.swh: dict[str, str] | None = None  # swhid -> first found archived; None: not asked
         self.signatures: dict[str, dict] = {}  # commit -> what GitHub says of its signature
 
     # ------------------------------------------------------------ names for people
@@ -412,7 +411,11 @@ class Model:
         None when the index does not say (an index older than the key), else one entry per proof,
         the same file name, kind and size in several places being one proof, with each place that
         holds it (library, the commit that first added it and its date, where the page fetches it).
-        A proof is of the object name, so it holds for every copy. Nothing here checks it."""
+        A proof is of the object name, so it holds for every copy. Nothing here checks it.
+
+        TOA does not say what the directory holds (decision of 11-25): a file may be in a
+        subdirectory (`file` holds `/`), and its kind is a hint from its extension, taken from the
+        index or, when the index gives none, guessed the same way."""
         locs = self.sorted_locations(o)
         if not any(isinstance(loc.get(INDEX.STAMPS), list) for loc in locs):
             return None
@@ -421,9 +424,14 @@ class Model:
             for s in loc.get(INDEX.STAMPS) or []:
                 if not isinstance(s, dict) or not isinstance(s.get("file"), str):
                     continue
-                path = f"{loc['path']}{INDEX.STAMPS_DIR}/{s['file']}"
-                e = out.setdefault((s["file"], s.get("kind"), s.get("size")),
-                                   {"file": s["file"], "kind": s.get("kind"), "size": s.get("size"), "places": []})
+                parts = s["file"].split("/")
+                if any(x in ("", ".", "..") for x in parts):   # a path inside the directory, nothing else
+                    continue
+                kind = s.get("kind") if isinstance(s.get("kind"), str) and s.get("kind") else stamp_kind(s["file"])
+                # each part of the path as it goes into an address: a file name may hold any character
+                path = f"{loc['path']}{INDEX.STAMPS_DIR}/" + "/".join(quote(x, safe="") for x in parts)
+                e = out.setdefault((s["file"], kind, s.get("size")),
+                                   {"file": s["file"], "kind": kind, "size": s.get("size"), "places": []})
                 e["places"].append({"library": loc["library"], "commit": s.get("commit"), "date": s.get("date"),
                                     "raw": self.library_file(loc["library"], path), "web": self.web_url(loc["library"], path)})
         return sorted(out.values(), key=lambda e: (min(date_key(p["date"]) for p in e["places"]), e["file"]))
@@ -703,9 +711,6 @@ class Model:
             "first_signature": self.signature_of((o.get("first") or {}).get("library"), (o.get("first") or {}).get("commit"),
                                                  o.get("first") or {}, INDEX.SIGNATURE),
             "seen": self.seen.get(name),
-            "swhid": swhid(name),
-            "swh": None if self.swh is None or not swhid(name) else {"known": swhid(name) in self.swh,
-                                                                      "since": self.swh.get(swhid(name))},
             "stamps": self.stamps_of(o),
             "same_files": self.same.get(name),
             "removals": [

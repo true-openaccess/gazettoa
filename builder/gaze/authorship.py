@@ -7,9 +7,6 @@ build gives three kinds of evidence:
   the time of the build. The record is kept from build to build and only ever added to. It is the
   record of whoever runs this site, not a proof by a third party; the dates of commits are written
   by the committers and prove less still.
-- **Its identifier in Software Heritage:** the hash of an object name is the hash of a directory
-  there, `swh:1:dir:<hash>` (TOA chapter 11). Optionally, the build asks Software Heritage which
-  objects it has archived (`software_heritage_check: true` in gaze.yaml).
 - **Who signed the commit that put it into each library** (data/signatures.json): the index says
   whether that commit is signed and in which format, unverified (TOA 6.3, 8.3). For a library on
   github.com, the build asks GitHub whether the signature verified and for which account, once
@@ -31,13 +28,8 @@ import urllib.request
 
 from .config import split_address
 from .fields import INDEX
-from .views import swhid
 
 SEEN_FORMAT = "gaze-seen/1"
-SWH_FORMAT = "gaze-swh/1"
-SWH_ARCHIVE = "https://archive.softwareheritage.org/"
-SWH_KNOWN = SWH_ARCHIVE + "api/1/known/"
-SWH_BATCH = 1000          # SWHIDs per request to the known endpoint
 SIG_FORMAT = "gaze-signatures/1"
 GITHUB_API = "https://api.github.com/"
 SIG_MAX = 400             # commits asked of GitHub per build; the rest wait for the next one
@@ -69,36 +61,6 @@ def update_seen(model, prev: dict | None, built: str) -> dict:
             e["before"] = True
         objs[n] = e
     return {"format": SEEN_FORMAT, "since": since, "objects": objs}
-
-
-# ------------------------------------------------------------------ archived by Software Heritage
-
-def swh_known(names, prev: dict | None, built: str, log) -> dict:
-    """Which objects Software Heritage has archived: {"format", "checked", "known": {swhid: date}}.
-
-    The date is the first build that found it archived. Only names not yet found are asked, in
-    batches; a request that fails leaves what was known before."""
-    ok = isinstance(prev, dict) and prev.get("format") == SWH_FORMAT and isinstance(prev.get("known"), dict)
-    known = dict(prev["known"]) if ok else {}
-    ask = sorted({s for s in (swhid(n) for n in names) if s and s not in known})
-    asked = 0
-    for i in range(0, len(ask), SWH_BATCH):
-        part = ask[i:i + SWH_BATCH]
-        req = urllib.request.Request(SWH_KNOWN, data=json.dumps(part).encode("utf-8"), method="POST",
-                                     headers={"Content-Type": "application/json", "User-Agent": "gazettoa"})
-        try:
-            with urllib.request.urlopen(req, timeout=60) as r:
-                got = json.loads(r.read().decode("utf-8"))
-        except (OSError, ValueError, urllib.error.URLError) as e:
-            log(f"Software Heritage: the known endpoint failed ({e}); {len(ask) - i} names not asked")
-            return {"format": SWH_FORMAT, "checked": prev.get("checked") if ok else None, "known": known}
-        for s in part:
-            if isinstance(got, dict) and isinstance(got.get(s), dict) and got[s].get("known") is True:
-                known[s] = built
-        asked += len(part)
-    if asked:
-        log(f"Software Heritage: asked {asked}, {len(known)} archived in all")
-    return {"format": SWH_FORMAT, "checked": built, "known": known}
 
 
 # ------------------------------------------------------------------ who signed, as GitHub verified it

@@ -27,7 +27,7 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--prev", type=Path, help="an earlier build to reuse, when it is not in --out")
     b.add_argument("--toa", help="the toa executable, to copy files of libraries the page cannot reach (default: toa on PATH)")
     b.add_argument("--copy-raw", action="store_true", help="copy the files of every object into the site, for a preview or a private instance")
-    b.add_argument("--offline", action="store_true", help="stay offline: pass --offline to toa when copying, and ask neither Software Heritage nor GitHub")
+    b.add_argument("--offline", action="store_true", help="stay offline: pass --offline to toa when copying, and do not ask GitHub")
     b.add_argument("--site-url", help="the address the site is published at (default: gaze.yaml, else from GitHub Actions)")
     b.add_argument("--local-files", type=Path, action="append", default=[],
                    help="a directory with a checkout of libraries by their keys (DIR/<key>/); the page reads their files "
