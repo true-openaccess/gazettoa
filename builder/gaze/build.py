@@ -249,7 +249,17 @@ def compute_changes(model: Model, prev_places: dict[str, dict], prev_changes: li
 
 # ------------------------------------------------------------------ the page shell
 
+# Cloudflare Web Analytics, when gaze.yaml names a token: the tag Cloudflare gives, as it gives it, put
+# before </body>; its script comes from CF_SCRIPT and reports to CF_REPORT, which the policy of the
+# page lets through (Cloudflare's documentation of Web Analytics and Content Security Policy).
+CF_TAG = ("<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' "
+          "data-cf-beacon='{\"token\": \"TOKEN\"}'></script><!-- End Cloudflare Web Analytics -->")
+CF_SCRIPT = "https://static.cloudflareinsights.com"
+CF_REPORT = "https://cloudflareinsights.com"
+
+
 def _csp(model: Model) -> str:
+    cf = bool(model.cfg.cloudflare_web_analytics)
     origins = set()
     for lib in model.index.libraries:
         tpl = model.templates.get(lib["key"])
@@ -257,10 +267,11 @@ def _csp(model: Model) -> str:
             u = urlsplit(tpl[0].replace("{commit}", "x").replace("{path}", "x"))
             if u.scheme == "https" and u.hostname:
                 origins.add(f"https://{u.hostname}")
-    connect = " ".join(["'self'", *sorted(origins)])
+    connect = " ".join(["'self'", *sorted(origins), *([CF_REPORT] if cf else [])])
+    script = " ".join(["'self'", *([CF_SCRIPT] if cf else [])])
     viewer = urlsplit(model.cfg.viewer_url)
     frame = f"https://{viewer.hostname}" if viewer.scheme == "https" and viewer.hostname else "'none'"
-    return (f"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+    return (f"default-src 'self'; script-src {script}; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
             f"connect-src {connect}; frame-src {frame}; object-src 'none'; base-uri 'self'; form-action 'none'")
 
 
@@ -284,6 +295,10 @@ def write_shell(out: Path, model: Model, web_dir: Path, i18n_dir: Path) -> None:
         head += f'\n<link rel="alternate" type="application/atom+xml" title="{esc(model.cfg.title)}" href="feeds/all.xml">'
     head += '\n<link rel="help" type="text/plain" href="llms.txt">'
     html = html.replace("<!--gaze:head-->", head)
+    # every page of the site is this one file, its routes after the #: one tag counts them all
+    if model.cfg.cloudflare_web_analytics:
+        end = html.rindex("</body>")
+        html = html[:end] + CF_TAG.replace("TOKEN", model.cfg.cloudflare_web_analytics) + "\n" + html[end:]
     (out / "index.html").write_bytes(html.encode("utf-8"))
     if i18n_dir.is_dir():
         shutil.copytree(i18n_dir, out / "i18n")

@@ -167,6 +167,9 @@ class Config:
     # ask GitHub whether the signed commits of libraries on github.com verified, and by whom (B35);
     # only with a token in GITHUB_TOKEN, as an Actions job has, and not offline
     github_signature_check: bool = True
+    # the token of a site in Cloudflare Web Analytics: the page then carries Cloudflare's tag
+    # (build.write_shell); empty, no tag and nothing sent anywhere
+    cloudflare_web_analytics: str = ""
     source: Path | None = None    # the file read, if any
 
     def library_raw_mode(self, key: str) -> str:
@@ -196,7 +199,7 @@ def load(instance: Path, site_url: str | None = None) -> Config:
         data = parse_yaml_subset(path.read_text(encoding="utf-8"), str(path.name))
         cfg.source = path
         known = {"schema", "title", "description", "site_url", "viewer_url", "toa_site", "hosts", "libraries",
-                 "github_signature_check"}
+                 "github_signature_check", "cloudflare_web_analytics"}
         for k in data:
             if k not in known:
                 raise ConfigError(f"{CONFIG_FILE}: unknown key {k!r}; known: {', '.join(sorted(known))}")
@@ -210,6 +213,13 @@ def load(instance: Path, site_url: str | None = None) -> Config:
         # a link on the home page: an address on the web, never a script
         if cfg.toa_site and not re.match(r"^https?://[^\s\"'<>]+$", cfg.toa_site):
             raise ConfigError(f"{CONFIG_FILE}: toa_site is an address that starts with https://, not {cfg.toa_site!r}")
+        # written into the page as it is: letters and digits only, as Cloudflare gives it
+        cf = data.get("cloudflare_web_analytics")
+        if cf is not None:
+            if not isinstance(cf, str) or not re.match(r"^[0-9A-Za-z]{16,64}$", cf):
+                raise ConfigError(f"{CONFIG_FILE}: cloudflare_web_analytics is the token Cloudflare gives a site, "
+                                  f"letters and digits, not {cf!r}")
+            cfg.cloudflare_web_analytics = cf
         if data.get("github_signature_check") is not None:
             if not isinstance(data["github_signature_check"], bool):
                 raise ConfigError(f"{CONFIG_FILE}: github_signature_check is true or false")

@@ -13,6 +13,9 @@ toa_site: https://true-openaccess.github.io/toa/
 #   git.example.org:
 #     raw: "https://git.example.org/{repo}/raw/{commit}/{path}"
 #     web: "https://git.example.org/{repo}/tree/{commit}/{path}"
+# cloudflare_web_analytics: the token of this site in Cloudflare Web Analytics; every page then
+# carries Cloudflare's tag. A fork leaves it out or writes its own
+cloudflare_web_analytics: "4a066cd3bb5a4232b6ef867802baa592"
 # github_signature_check: false   # do not ask GitHub whether signed commits verified (asked by
 #   default when the build has a token in GITHUB_TOKEN, as in GitHub Actions)
 # libraries: per library, by its key (the group of its include line)

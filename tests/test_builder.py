@@ -865,6 +865,52 @@ def with_copy(src: Path, dst: Path, *, of: str = CKT_RAZAVI, author: str | None 
     (dst / "libraries" / "alice.json").write_bytes(json.dumps(lib).encode())
 
 
+class Analytics(unittest.TestCase):
+    """Cloudflare Web Analytics: the token in gaze.yaml, the tag as Cloudflare gives it before </body>
+    of the one page of the site, and its two hosts let through by the policy of the page."""
+    # the tag as the user gave it, for the official instance
+    TAG = ("<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' "
+           "data-cf-beacon='{\"token\": \"4a066cd3bb5a4232b6ef867802baa592\"}'></script><!-- End Cloudflare Web Analytics -->")
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.instance = self.dir / "instance"
+        self.instance.mkdir()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def page(self, name: str) -> str:
+        out = self.dir / name
+        build(self.instance, DATA, out, built="2026-11-28T00:00:00Z")
+        return (out / "index.html").read_bytes().decode("utf-8")
+
+    def test_the_tag_only_with_a_token(self):
+        plain = self.page("plain")
+        self.assertNotIn("cloudflareinsights", plain)
+        self.assertIn("script-src 'self'; ", plain)
+        (self.instance / "gaze.yaml").write_bytes(b'cloudflare_web_analytics: "4a066cd3bb5a4232b6ef867802baa592"\n')
+        tagged = self.page("tagged")
+        self.assertEqual(tagged.count(self.TAG), 1)
+        self.assertTrue(tagged.endswith(self.TAG + "\n</body>\n</html>\n"))
+        self.assertIn("script-src 'self' https://static.cloudflareinsights.com; ", tagged)
+        self.assertRegex(tagged, r"connect-src 'self'[^;]* https://cloudflareinsights\.com;")
+        # nothing else of the page changes
+        csp = re.compile(r'<meta http-equiv="Content-Security-Policy" content="[^"]*">')
+        self.assertEqual(csp.sub("", tagged.replace(self.TAG + "\n", "")), csp.sub("", plain))
+
+    def test_the_official_instance_has_its_token(self):
+        self.assertEqual(config.load(GAZE / "instance").cloudflare_web_analytics, "4a066cd3bb5a4232b6ef867802baa592")
+        self.assertEqual(config.Config().cloudflare_web_analytics, "")
+
+    def test_a_token_is_letters_and_digits(self):
+        for bad in (b'"abc"', b'"4a066cd3bb5a4232b6ef867802baa592\'><script>"', b"true"):
+            (self.instance / "gaze.yaml").write_bytes(b"cloudflare_web_analytics: " + bad + b"\n")
+            with self.assertRaises(config.ConfigError, msg=bad):
+                config.load(self.instance)
+
+
 class Authorship(unittest.TestCase):
     """Evidence of authorship and time (decision B35): first seen, same files."""
 
