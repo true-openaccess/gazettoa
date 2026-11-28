@@ -136,7 +136,7 @@ spaces, `key: value`, one-line `{a: b}` mappings and `#` comments. Its keys:
 | `site_url` | The published address, for feeds and `llms.txt`; default from GitHub Actions |
 | `viewer_url` | The RNL viewer embedded for schematics; the page sends it the netlist as text |
 | `toa_site` | The site of TOA, linked from the home page as "About TOA"; left out, the home page has no such link |
-| `cloudflare_web_analytics` | The token of the site in Cloudflare Web Analytics: the page carries Cloudflare's tag before `</body>`, and its Content-Security-Policy lets `static.cloudflareinsights.com` and `cloudflareinsights.com` through. Every page of the site is one file, `index.html`, so this counts them all. Left out, no tag; a fork leaves it out or writes its own |
+| `cloudflare_web_analytics` | The token of the site in Cloudflare Web Analytics: the page carries Cloudflare's tag before `</body>`, and its Content-Security-Policy lets `static.cloudflareinsights.com` and `cloudflareinsights.com` through. Every page of the site is one file, `index.html`, so this counts them all, and the footer of every view says that the site counts visits with Cloudflare Web Analytics and sets no cookies. Left out, no tag and no such line; a fork leaves it out or writes its own |
 | `hosts.<host>.raw`, `.web` | How a file and a folder of a library on another host are addressed: `{repo}`, `{commit}`, `{path}` |
 | `libraries.<key>.raw` | `url` (the page fetches files from the host, the default) or `copy` (the build copies them) |
 

@@ -516,6 +516,9 @@ def build(instance: Path, index_dir: Path, out: Path, *, prev: Path | None = Non
         "site_url": cfg.site_url,
         "viewer_url": cfg.viewer_url,
         "toa_site": cfg.toa_site,
+        # "cloudflare" when the page carries the tag of Cloudflare Web Analytics (gaze.yaml), so that
+        # every page says so; null when it counts nothing
+        "analytics": "cloudflare" if cfg.cloudflare_web_analytics else None,
         "repository": cfg.repository,
         "built": built,
         "feeds": feeds_ok,

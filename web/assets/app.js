@@ -94,6 +94,8 @@ function paintChrome() {
       ...scanTimes(),
       `<span>${esc(t("Index by {tool}, TOA {v}", { tool: s.index.tool || "toa", v: s.index.standard || "?" }))}</span>`,
       `<span>${esc(t("Objects are their authors'; each keeps its own license."))}</span>`,
+      // only when the page carries the tag (gaze.yaml, cloudflare_web_analytics)
+      s.analytics === "cloudflare" ? `<span>${esc(t("This site uses Cloudflare Web Analytics to count visits. It sets no cookies."))}</span>` : "",
       `<a href="#/agent">${esc(t("For agents"))}</a>`,
       `<a href="llms.txt">llms.txt</a>`,
       s.repository ? `<a href="${esc(s.repository)}" target="_blank" rel="noopener noreferrer">${esc(t("Code of this site"))}</a>` : "",

@@ -889,10 +889,13 @@ class Analytics(unittest.TestCase):
     def test_the_tag_only_with_a_token(self):
         plain = self.page("plain")
         self.assertNotIn("cloudflareinsights", plain)
+        self.assertIsNone(load(self.dir / "plain" / "data" / "site.json")["analytics"])   # the footer says nothing
         self.assertIn("script-src 'self'; ", plain)
         (self.instance / "gaze.yaml").write_bytes(b'cloudflare_web_analytics: "4a066cd3bb5a4232b6ef867802baa592"\n')
         tagged = self.page("tagged")
         self.assertEqual(tagged.count(self.TAG), 1)
+        # the footer of every view says that the site counts visits (app.js)
+        self.assertEqual(load(self.dir / "tagged" / "data" / "site.json")["analytics"], "cloudflare")
         self.assertTrue(tagged.endswith(self.TAG + "\n</body>\n</html>\n"))
         self.assertIn("script-src 'self' https://static.cloudflareinsights.com; ", tagged)
         self.assertRegex(tagged, r"connect-src 'self'[^;]* https://cloudflareinsights\.com;")
